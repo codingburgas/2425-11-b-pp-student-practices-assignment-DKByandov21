@@ -1,4 +1,4 @@
-# 🧠 Binary Image Classifier – AI Web App for Shape Recognition
+# 🧠 BIC - Binary Image Classifier
 
 
 <img src="./docs/banner.png" alt="Banner" />
