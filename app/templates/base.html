@@ -50,25 +50,30 @@
     <div class="sticky-top bg-white shadow-sm">
         {% include 'components/navbar.html' %}
     </div>
-    <main>
+    <!-- Fixed position flash messages container -->
+    <div id="flash-messages-container" class="position-fixed" style="top: 80px; right: 20px; z-index: 1060; max-width: 400px;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="container mt-3">
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category in ['error', 'danger'] else category }} alert-dismissible fade show d-flex align-items-center gap-2 shadow-sm" role="alert">
+                    <div class="alert alert-{{ 'danger' if category in ['error', 'danger'] else category }} alert-dismissible fade show d-flex align-items-center gap-2 shadow-lg mb-3 flash-alert" 
+                         role="alert" 
+                         data-auto-dismiss="true"
+                         style="border-radius: var(--radius-md); border: none; backdrop-filter: blur(10px);">
                         <span class="flash-icon">
-                            {% if category == 'success' %}<i class="fas fa-check-circle text-success"></i>{% endif %}
-                            {% if category in ['error', 'danger'] %}<i class="fas fa-times-circle text-danger"></i>{% endif %}
-                            {% if category == 'info' %}<i class="fas fa-info-circle text-info"></i>{% endif %}
-                            {% if category == 'warning' %}<i class="fas fa-exclamation-triangle text-warning"></i>{% endif %}
+                            {% if category == 'success' %}<i class="fas fa-check-circle"></i>{% endif %}
+                            {% if category in ['error', 'danger'] %}<i class="fas fa-times-circle"></i>{% endif %}
+                            {% if category == 'info' %}<i class="fas fa-info-circle"></i>{% endif %}
+                            {% if category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>{% endif %}
                         </span>
-                        <span>{{ message }}</span>
-                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <span class="flex-grow-1">{{ message }}</span>
+                        <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
-                </div>
             {% endif %}
         {% endwith %}
+    </div>
+
+    <main>
         {% block content %}{% endblock %}
     </main>
     <footer class="footer">
@@ -85,6 +90,52 @@
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Flash Messages Auto-dismiss Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-dismiss flash messages after 5 seconds
+            const flashAlerts = document.querySelectorAll('.flash-alert[data-auto-dismiss="true"]');
+            
+            flashAlerts.forEach(function(alert, index) {
+                // Stagger the entrance animation
+                setTimeout(function() {
+                    alert.style.transform = 'translateX(0)';
+                    alert.style.opacity = '1';
+                }, index * 150);
+                
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        fadeOutAlert(alert);
+                    }
+                }, 5000 + (index * 150));
+            });
+            
+            // Handle manual close button clicks
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('btn-close')) {
+                    const alert = e.target.closest('.flash-alert');
+                    if (alert) {
+                        fadeOutAlert(alert);
+                    }
+                }
+            });
+            
+            function fadeOutAlert(alert) {
+                alert.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                alert.style.transform = 'translateX(100%)';
+                alert.style.opacity = '0';
+                
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 300);
+            }
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html> 
