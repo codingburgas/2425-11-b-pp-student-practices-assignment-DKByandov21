@@ -12,12 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     <style>
-        html, body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: #f8fafc;
-            color: #22223b;
-            min-height: 100vh;
-        }
         .container, .container-fluid {
             padding-top: 2rem;
             padding-bottom: 2rem;
@@ -27,27 +21,27 @@
         }
         .flash-icon {
             font-size: 1.2em;
-            margin-right: 0.5em;
+            margin-right: 0.75em;
+            opacity: 0.9;
         }
-        .footer {
-            background: #f8fafc;
-            border-top: 1px solid #e5e7eb;
-            padding: 2rem 0 1rem 0;
-            text-align: center;
-            color: #64748b;
-            font-size: 1rem;
-            margin-top: 3rem;
+        main {
+            min-height: calc(100vh - 200px);
         }
-        .footer a {
-            color: #2563eb;
-            text-decoration: none;
-            margin: 0 0.5rem;
-            font-weight: 500;
-            transition: color 0.2s;
+        .alert {
+            border-left-width: 4px;
+            border-left-style: solid;
         }
-        .footer a:hover {
-            color: #1e40af;
-            text-decoration: underline;
+        .alert-success {
+            border-left-color: var(--success);
+        }
+        .alert-danger {
+            border-left-color: var(--danger);
+        }
+        .alert-info {
+            border-left-color: var(--info);
+        }
+        .alert-warning {
+            border-left-color: var(--warning);
         }
     </style>
     {% block head %}{% endblock %}

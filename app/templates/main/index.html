@@ -2,121 +2,22 @@
 
 {% block title %}Shape Classifier - AI-Powered Image Recognition{% endblock %}
 
-{% block head %}
-<style>
-.hero-section {
-    background: linear-gradient(135deg, var(--bg) 0%, var(--accent-light) 100%);
-    padding: 4rem 0 3rem 0;
-    text-align: center;
-    border-radius: 0 0 2rem 2rem;
-    box-shadow: 0 2px 24px 0 rgba(80, 112, 255, 0.08);
-}
-.hero-title {
-    font-size: 2.7rem;
-    font-weight: 800;
-    letter-spacing: -1px;
-    color: #22223b;
-    margin-bottom: 1rem;
-}
-.hero-desc {
-    font-size: 1.2rem;
-    color: #4b5563;
-    margin-bottom: 2rem;
-}
-.hero-cta {
-    font-size: 1.15rem;
-    padding: 0.75rem 2.5rem;
-    border-radius: 2rem;
-    box-shadow: 0 2px 8px 0 rgba(80, 112, 255, 0.10);
-    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
-    font-weight: 600;
-}
-.hero-cta:hover {
-    background: #2563eb;
-    color: #fff;
-    transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 4px 16px 0 rgba(80, 112, 255, 0.18);
-}
-.features-section {
-    background: #fff;
-    padding: 3rem 0 2rem 0;
-}
-.feature-card {
-    background: #f1f5f9;
-    border-radius: 1.25rem;
-    box-shadow: 0 2px 12px 0 rgba(80, 112, 255, 0.06);
-    padding: 2rem 1.5rem;
-    text-align: center;
-    margin-bottom: 2rem;
-    transition: box-shadow 0.2s, transform 0.2s;
-}
-.feature-card:hover {
-    box-shadow: 0 6px 24px 0 rgba(80, 112, 255, 0.13);
-    transform: translateY(-4px) scale(1.03);
-}
-.feature-icon {
-    font-size: 2.5rem;
-    color: #2563eb;
-    margin-bottom: 1rem;
-}
-.feature-title {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #22223b;
-    margin-bottom: 0.5rem;
-}
-.feature-desc {
-    color: #64748b;
-    font-size: 1rem;
-}
-.preview-img {
-    max-width: 100%;
-    border-radius: 1.25rem;
-    box-shadow: 0 2px 16px 0 rgba(80, 112, 255, 0.10);
-    margin: 2rem auto 0 auto;
-    display: block;
-}
-.footer {
-    background: #f8fafc;
-    border-top: 1px solid #e5e7eb;
-    padding: 2rem 0 1rem 0;
-    text-align: center;
-    color: #64748b;
-    font-size: 1rem;
-    margin-top: 3rem;
-}
-.footer a {
-    color: #2563eb;
-    text-decoration: none;
-    margin: 0 0.5rem;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-.footer a:hover {
-    color: #1e40af;
-    text-decoration: underline;
-}
-@media (max-width: 767px) {
-    .hero-title { font-size: 2rem; }
-    .hero-section { padding: 2.5rem 0 2rem 0; }
-    .features-section { padding: 2rem 0 1rem 0; }
-}
-</style>
-{% endblock %}
+{% block head %}{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section py-5 text-center" style="background: linear-gradient(135deg, var(--bg) 0%, var(--accent-light) 100%);">
+<section class="hero-section text-center">
     <div class="container">
-        <div class="row justify-content-center align-items-center">
-            <div class="col-lg-8 mx-auto">
-                <h1 class="hero-title mb-3 display-4 fw-bold" style="color: var(--primary-dark);">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h1 class="hero-title fade-in">
                     Instantly Classify Circles & Squares with AI
                 </h1>
-                <p class="hero-desc mb-4 lead" style="color: var(--text-muted);">
-                    Upload your image and let our AI-powered platform tell you if it's a <b>circle</b> or a <b>square</b>—fast, accurate, and beautifully simple.
+                <p class="hero-desc fade-in">
+                    Upload your image and let our AI-powered platform tell you if it's a <strong>circle</strong> or a <strong>square</strong>—fast, accurate, and beautifully simple.
                 </p>
-                <a href="{{ url_for('main.predict') if current_user.is_authenticated else url_for('auth.register') }}" class="btn btn-primary btn-lg px-5 py-2 shadow-sm hero-cta">
+                <a href="{{ url_for('main.predict') if current_user.is_authenticated else url_for('auth.register') }}" class="btn btn-primary btn-lg hero-cta fade-in">
+                    <i class="fas fa-rocket me-2"></i>
                     {{ 'Try Now' if current_user.is_authenticated else 'Get Started' }}
                 </a>
             </div>
@@ -125,47 +26,39 @@
 </section>
 
 <!-- Features Section -->
-<section class="features-section py-5 bg-white border-0" style="background: var(--surface);">
+<section class="py-5" style="background: var(--surface);">
     <div class="container">
         <div class="row g-4 justify-content-center">
             <div class="col-md-4">
-                <div class="feature-card h-100 p-4 text-center border-0">
-                    <div class="feature-icon mb-3" style="color: var(--primary); font-size: 2.5rem;"><i class="fas fa-bolt"></i></div>
-                    <div class="feature-title mb-2 fw-semibold">Lightning Fast Predictions</div>
-                    <div class="feature-desc text-muted">Upload a 28x28 PNG and get instant shape classification with confidence scores.</div>
+                <div class="feature-card slide-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Lightning Fast Predictions</h3>
+                    <p class="feature-desc">Upload a 28x28 PNG and get instant shape classification with confidence scores.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="feature-card h-100 p-4 text-center border-0">
-                    <div class="feature-icon mb-3" style="color: var(--accent); font-size: 2.5rem;"><i class="fas fa-comments"></i></div>
-                    <div class="feature-title mb-2 fw-semibold">Feedback & Learning</div>
-                    <div class="feature-desc text-muted">Submit feedback, view your history, and help us improve the platform for everyone.</div>
+                <div class="feature-card slide-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="feature-title">Feedback & Learning</h3>
+                    <p class="feature-desc">Submit feedback, view your history, and help us improve the platform for everyone.</p>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="feature-card h-100 p-4 text-center border-0">
-                    <div class="feature-icon mb-3" style="color: var(--primary-dark); font-size: 2.5rem;"><i class="fas fa-chart-bar"></i></div>
-                    <div class="feature-title mb-2 fw-semibold">Admin Analytics</div>
-                    <div class="feature-desc text-muted">Admins can analyze predictions and feedback with beautiful, interactive analytics tools.</div>
+                <div class="feature-card slide-in">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="feature-title">Admin Analytics</h3>
+                    <p class="feature-desc">Admins can analyze predictions and feedback with beautiful, interactive analytics tools.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="mb-2">
-            {% if not current_user.is_authenticated %}
-            <a href="{{ url_for('auth.login') }}">Login</a>|
-            <a href="{{ url_for('auth.register') }}">Register</a>|
-            {% endif %}
-            <a href="{{ url_for('main.feedback') }}">Feedback</a>
-        </div>
-        <div>
-            &copy; {{ 2024 }} Shape Classifier &mdash; Built with Flask &amp; AI
-        </div>
-    </div>
-</footer>
+
 {% endblock %} 
