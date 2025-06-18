@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Management - Admin{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--box-shadow);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+}
+
+.keyword-tag {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    margin: 0.25rem;
+}
+
+.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.sortable:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-chart-bar me-2 text-primary"></i>
+                Feedback Management
+            </h1>
+            <p class="text-muted mb-0">Analyze and manage user feedback</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_feedback }}</div>
+            <div class="stat-label">Total Feedback</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ "%.1f"|format(avg_rating) }}</div>
+            <div class="stat-label">Average Rating</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ public_feedback }}</div>
+            <div class="stat-label">Public Feedback</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_feedback - public_feedback }}</div>
+            <div class="stat-label">Private Feedback</div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-star me-2 text-warning"></i>
+                    Rating Distribution
+                </h5>
+                <canvas id="ratingChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-eye me-2 text-info"></i>
+                    Visibility Distribution
+                </h5>
+                <canvas id="visibilityChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keywords Section -->
+    {% if keyword_freq %}
+    <div class="card shadow-lg border-0 mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-tags me-2"></i>
+                Most Common Keywords
+            </h5>
+        </div>
+        <div class="card-body">
+            {% for keyword, count in keyword_freq %}
+            <span class="keyword-tag">
+                {{ keyword }} ({{ count }})
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Feedback Table -->
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>
+                All Feedback
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="sortable" onclick="sortTable('rating')">
+                                Rating <i class="fas fa-sort"></i>
+                            </th>
+                            <th>User</th>
+                            <th>Comment</th>
+                            <th>Visibility</th>
+                            <th class="sortable" onclick="sortTable('created_at')">
+                                Date <i class="fas fa-sort"></i>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in feedbacks.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="text-warning me-2">{{ feedback.rating_stars }}</span>
+                                    <small class="text-muted">({{ feedback.rating_text }})</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ feedback.user.get_profile_picture_url() }}" 
+                                         alt="Profile" 
+                                         class="rounded-circle me-2"
+                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold">{{ feedback.user.username }}</div>
+                                        <small class="text-muted">{{ feedback.user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if feedback.comment %}
+                                    <p class="mb-0">{{ feedback.comment[:150] }}{% if feedback.comment|length > 150 %}...{% endif %}</p>
+                                {% else %}
+                                    <span class="text-muted">No comment</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if feedback.is_public %}success{% else %}secondary{% endif %}">
+                                    <i class="fas fa-{% if feedback.is_public %}eye{% else %}eye-slash{% endif %} me-1"></i>
+                                    {{ 'Public' if feedback.is_public else 'Private' }}
+                                </span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ feedback.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-info" 
+                                            onclick="viewFeedback({{ feedback.id }})" 
+                                            title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="{{ url_for('admin.delete_feedback', feedback_id=feedback.id) }}" 
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this feedback?')"
+                                       title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if feedbacks.pages > 1 %}
+    <nav aria-label="Feedback pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if feedbacks.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.feedback', page=feedbacks.prev_num) }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page_num in feedbacks.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != feedbacks.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.feedback', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if feedbacks.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.feedback', page=feedbacks.next_num) }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Feedback Detail Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Feedback Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="feedbackModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Rating Distribution Chart
+const ratingCtx = document.getElementById('ratingChart').getContext('2d');
+const ratingChart = new Chart(ratingCtx, {
+    type: 'bar',
+    data: {
+        labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+        datasets: [{
+            label: 'Number of Ratings',
+            data: [
+                {{ rating_dist.get(1, 0) }},
+                {{ rating_dist.get(2, 0) }},
+                {{ rating_dist.get(3, 0) }},
+                {{ rating_dist.get(4, 0) }},
+                {{ rating_dist.get(5, 0) }}
+            ],
+            backgroundColor: [
+                '#dc3545',
+                '#fd7e14',
+                '#ffc107',
+                '#20c997',
+                '#198754'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Visibility Distribution Chart
+const visibilityCtx = document.getElementById('visibilityChart').getContext('2d');
+const visibilityChart = new Chart(visibilityCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Public', 'Private'],
+        datasets: [{
+            data: [{{ public_feedback }}, {{ total_feedback - public_feedback }}],
+            backgroundColor: ['#198754', '#6c757d'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Table sorting function
+function sortTable(column) {
+    const currentUrl = new URL(window.location);
+    const currentSort = currentUrl.searchParams.get('sort');
+    const currentOrder = currentUrl.searchParams.get('order');
+    
+    let newOrder = 'desc';
+    if (currentSort === column && currentOrder === 'desc') {
+        newOrder = 'asc';
+    }
+    
+    currentUrl.searchParams.set('sort', column);
+    currentUrl.searchParams.set('order', newOrder);
+    window.location.href = currentUrl.toString();
+}
+
+// View feedback details
+function viewFeedback(feedbackId) {
+    // This would typically load feedback details via AJAX
+    // For now, we'll show a simple message
+    document.getElementById('feedbackModalBody').innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-3"></i>
+            <p>Loading feedback details...</p>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+    modal.show();
+    
+    // In a real implementation, you would fetch the feedback details here
+    setTimeout(() => {
+        document.getElementById('feedbackModalBody').innerHTML = `
+            <p>Feedback details would be loaded here for feedback ID: ${feedbackId}</p>
+        `;
+    }, 1000);
+}
+</script>
+{% endblock %} 

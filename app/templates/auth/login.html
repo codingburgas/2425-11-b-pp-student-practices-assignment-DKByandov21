@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Shape Classifier{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-lg border-0">
+        <div class="card-body p-4">
+          <h2 class="card-title mb-4 text-center">
+            <i class="fas fa-sign-in-alt text-primary me-2"></i>Login
+          </h2>
+          <form method="POST" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="mb-4">
+              {{ form.email.label(class="form-label fw-semibold") }}
+              {{ form.email(class="form-control form-control-lg", placeholder="Enter your email") }}
+              {% for error in form.email.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="mb-4">
+              {{ form.password.label(class="form-label fw-semibold") }}
+              {{ form.password(class="form-control form-control-lg", placeholder="Enter your password") }}
+              {% for error in form.password.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+            <div class="d-grid mb-3">
+              <button type="submit" class="btn btn-primary btn-lg shadow-sm">Login</button>
+            </div>
+          </form>
+          <div class="text-center mt-3">
+            <span class="text-muted">Don't have an account?</span>
+            <a href="{{ url_for('auth.register') }}" class="fw-semibold">Register</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

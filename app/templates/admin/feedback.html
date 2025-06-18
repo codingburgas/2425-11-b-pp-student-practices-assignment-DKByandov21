@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback Management - Admin{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-chart-bar me-2 text-primary"></i>
+                Feedback Management
+            </h1>
+            <p class="text-muted mb-0">Analyze and manage user feedback</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary rounded-pill">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+    <!-- Analytics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-6">
+            <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="stat-number">{{ total_feedback }}</div>
+                    <div class="stat-label">Total Feedback</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="stat-number">{{ rating_dist[4] }}</div>
+                    <div class="stat-label">5-Star</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="stat-number">{{ rating_dist[3] }}</div>
+                    <div class="stat-label">4-Star</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="stat-number">{{ rating_dist[2] }}</div>
+                    <div class="stat-label">3-Star</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="stat-number">{{ public_count }}</div>
+                    <div class="stat-label">Public</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="stat-number">{{ private_count }}</div>
+                    <div class="stat-label">Private</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card chart-container rounded-4 shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        <i class="fas fa-star me-2 text-warning"></i>
+                        Rating Distribution
+                    </h5>
+                    <canvas id="ratingChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card chart-container rounded-4 shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">
+                        <i class="fas fa-eye me-2 text-info"></i>
+                        Visibility Breakdown
+                    </h5>
+                    <canvas id="visibilityChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Filter/Search Bar -->
+    <form method="get" class="card p-3 shadow-sm mb-4 rounded-4 d-flex flex-wrap gap-3 align-items-center">
+        <div class="input-group" style="max-width: 300px;">
+            <input type="text" class="form-control" name="search" placeholder="Search comments or users..." value="{{ search }}">
+            <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
+        </div>
+        <select class="form-select" name="rating" style="max-width: 120px;">
+            <option value="">All Ratings</option>
+            {% for i in range(5, 0, -1) %}
+            <option value="{{ i }}" {% if rating_filter == i %}selected{% endif %}>{{ i }} Star</option>
+            {% endfor %}
+        </select>
+        <select class="form-select" name="visibility" style="max-width: 140px;">
+            <option value="">All Visibility</option>
+            <option value="public" {% if visibility_filter == 'public' %}selected{% endif %}>Public</option>
+            <option value="private" {% if visibility_filter == 'private' %}selected{% endif %}>Private</option>
+        </select>
+        <button class="btn btn-outline-secondary rounded-pill" type="submit">Filter</button>
+        {% if rating_filter or visibility_filter or search %}
+        <a href="{{ url_for('admin.feedback') }}" class="btn btn-link text-danger">Clear</a>
+        {% endif %}
+    </form>
+    <!-- Feedback Table -->
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h5 class="mb-0">
+                <i class="fas fa-table me-2"></i>
+                All Feedback
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if feedbacks.items %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th>Visibility</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in feedbacks.items %}
+                        <tr>
+                            <td>
+                                {% if feedback.user %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{{ feedback.user.get_profile_picture_url() }}" alt="Profile" class="rounded-circle border border-2 border-primary shadow-sm" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold">{{ feedback.user.username }}</div>
+                                        <small class="text-muted">ID: {{ feedback.user.id }}</small>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">[Deleted User]</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-warning">{% for _ in range(feedback.rating) %}&#9733;{% endfor %}</span>
+                                <span class="text-muted">({{ feedback.rating }})</span>
+                            </td>
+                            <td>
+                                {% if feedback.comment %}
+                                    <span>{{ feedback.comment[:100] }}{% if feedback.comment|length > 100 %}...{% endif %}</span>
+                                {% else %}
+                                    <span class="text-muted">No comment</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if feedback.is_public %}success{% else %}secondary{% endif %} rounded-pill px-3 py-2">
+                                    <i class="fas fa-{% if feedback.is_public %}eye{% else %}eye-slash{% endif %} me-1"></i>
+                                    {{ 'Public' if feedback.is_public else 'Private' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Feedback Found</h4>
+                <p class="text-muted">No feedback matches your filters or search. Try adjusting your criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+// Bar chart for rating distribution
+const ratingChart = new Chart(document.getElementById('ratingChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+        labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+        datasets: [{
+            label: 'Count',
+            data: {{ rating_dist|tojson }},
+            backgroundColor: [
+                '#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, stepSize: 1 } }
+    }
+});
+// Pie chart for visibility
+const visibilityChart = new Chart(document.getElementById('visibilityChart').getContext('2d'), {
+    type: 'pie',
+    data: {
+        labels: ['Public', 'Private'],
+        datasets: [{
+            data: [{{ public_count }}, {{ private_count }}],
+            backgroundColor: ['#198754', '#6c757d'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+</script> 

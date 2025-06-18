@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}All Predictions - Shape Classifier{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>All Predictions</h2>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+  </div>
+
+  {% if predictions %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>User</th>
+                <th>File</th>
+                <th>Prediction</th>
+                <th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for prediction in predictions %}
+              <tr>
+                <td>{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ prediction.user.username }}</td>
+                <td>{{ prediction.filename }}</td>
+                <td>
+                  <span class="badge bg-{% if prediction.prediction == 'Circle' %}info{% else %}warning{% endif %}">
+                    {{ prediction.prediction }}
+                  </span>
+                </td>
+                <td>
+                  {% if prediction.confidence %}
+                    <div class="d-flex align-items-center">
+                      <span class="fw-semibold me-2">{{ "%.1f"|format(prediction.confidence * 100) }}%</span>
+                      <div class="progress flex-grow-1" style="height: 8px;">
+                        <div class="progress-bar bg-{% if prediction.confidence > 0.7 %}success{% elif prediction.confidence > 0.4 %}warning{% else %}danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ prediction.confidence * 100 }}%"></div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+      <h4 class="text-muted">No Predictions Found</h4>
+      <p class="text-muted">No predictions have been made yet.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %} 

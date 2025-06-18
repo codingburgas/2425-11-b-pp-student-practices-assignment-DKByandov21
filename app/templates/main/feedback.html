@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - Shape Classifier{% endblock %}
+
+{% block head %}
+<style>
+.star-rating {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    font-size: 2rem;
+    justify-content: flex-start;
+}
+.star-rating input[type="radio"] {
+    display: none;
+}
+.star-rating label {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+    margin: 0;
+    padding: 0 0.1em;
+}
+.star-rating input[type="radio"]:checked ~ label,
+.star-rating label.selected,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #ffc107;
+}
+.star-rating label:active {
+    transform: scale(1.1);
+}
+@media (max-width: 600px) {
+    .star-rating { font-size: 1.5rem; }
+}
+
+.feedback-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.feedback-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Feedback Header -->
+            <div class="card shadow-lg border-0 bg-gradient-primary text-white mb-4 rounded-4">
+                <div class="card-body text-center p-4">
+                    <h1 class="mb-3">
+                        <i class="fas fa-comment-dots me-2"></i>
+                        Share Your Feedback
+                    </h1>
+                    <p class="mb-0 opacity-75">
+                        Help us improve by sharing your experience with our shape classification service
+                    </p>
+                </div>
+            </div>
+            <!-- Feedback Statistics -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                        <div class="card-body">
+                            <div class="stat-number">{{ current_user.feedbacks|length }}</div>
+                            <div class="stat-label">Your Reviews</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                        <div class="card-body">
+                            <div class="stat-number">{{ current_user.get_prediction_count() }}</div>
+                            <div class="stat-label">Predictions Made</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card text-center shadow-sm border-0 rounded-4">
+                        <div class="card-body">
+                            <div class="stat-number">{{ current_user.get_prediction_count() + current_user.feedbacks|length }}</div>
+                            <div class="stat-label">Total Interactions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Feedback Form -->
+            <div class="card shadow-lg border-0 rounded-4 mb-4">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Submit Feedback
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        <!-- Star Rating -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">How would you rate your experience?</label>
+                            <div class="star-rating" id="star-rating">
+                                {% for value, label in form.rating.choices %}
+                                    <input type="radio" name="{{ form.rating.name }}" id="star{{ value }}" value="{{ value }}" {% if form.rating.data == value %}checked{% endif %} required>
+                                    <label for="star{{ value }}" title="{{ label }}">&#9733;</label>
+                                {% endfor %}
+                            </div>
+                            {% if form.rating.errors %}
+                                {% for error in form.rating.errors %}
+                                    <div class="text-danger small mt-2">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <!-- Comment Field -->
+                        <div class="mb-4">
+                            {{ form.comment.label(class="form-label fw-bold") }}
+                            {{ form.comment(class="form-control", rows="4") }}
+                            {% if form.comment.errors %}
+                                {% for error in form.comment.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <!-- Visibility Checkbox -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_public(class="form-check-input") }}
+                                {{ form.is_public.label(class="form-check-label") }}
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Public feedback helps other users, while private feedback is only visible to administrators
+                            </small>
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary btn-lg rounded-pill shadow-sm") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Recent Feedback -->
+            {% if current_user.feedbacks %}
+            <div class="card shadow-lg border-0 rounded-4 mt-4">
+                <div class="card-header bg-info text-white rounded-top-4">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Your Recent Feedback
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for feedback in current_user.feedbacks[:3] %}
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded-4 p-3 h-100 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="text-warning">
+                                        {{ feedback.rating_stars }}
+                                    </div>
+                                    <small class="text-muted">{{ feedback.created_at.strftime('%m/%d/%Y') }}</small>
+                                </div>
+                                {% if feedback.comment %}
+                                <p class="small text-muted mb-2">{{ feedback.comment[:100] }}{% if feedback.comment|length > 100 %}...{% endif %}</p>
+                                {% endif %}
+                                <span class="badge bg-{% if feedback.is_public %}success{% else %}secondary{% endif %} rounded-pill px-3 py-2">
+                                    <i class="fas fa-{% if feedback.is_public %}eye{% else %}eye-slash{% endif %} me-1"></i>
+                                    {{ 'Public' if feedback.is_public else 'Private' }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('main.my_feedback') }}" class="btn btn-outline-info rounded-pill">
+                            <i class="fas fa-list me-2"></i>View All Feedback
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Star rating highlight logic
+const stars = document.querySelectorAll('.star-rating label');
+stars.forEach((star, idx) => {
+    star.addEventListener('mouseenter', function() {
+        stars.forEach((s, i) => {
+            s.classList.toggle('selected', i <= idx);
+        });
+    });
+    star.addEventListener('mouseleave', function() {
+        stars.forEach(s => s.classList.remove('selected'));
+    });
+});
+// Ensure correct value is submitted
+const radios = document.querySelectorAll('.star-rating input[type="radio"]');
+radios.forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Remove all selected
+        stars.forEach(s => s.classList.remove('selected'));
+        // Add selected up to checked
+        let checkedIdx = Array.from(radios).findIndex(r => r.checked);
+        stars.forEach((s, i) => {
+            s.classList.toggle('selected', i <= checkedIdx);
+        });
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}My Predictions - Shape Classifier{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Predictions</h2>
+    <div>
+      <a href="{{ url_for('main.predict') }}" class="btn btn-primary">Make New Prediction</a>
+      <a href="{{ url_for('main.profile') }}" class="btn btn-secondary">Back to Profile</a>
+    </div>
+  </div>
+
+  {% if predictions.items %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>File</th>
+                <th>Prediction</th>
+                <th>Confidence</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for prediction in predictions.items %}
+              <tr>
+                <td>{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ prediction.filename }}</td>
+                <td>
+                  <span class="badge bg-{% if prediction.prediction == 'Circle' %}info{% else %}warning{% endif %}">
+                    {{ prediction.prediction }}
+                  </span>
+                </td>
+                <td>
+                  {% if prediction.confidence %}
+                    <div class="d-flex align-items-center">
+                      <span class="fw-semibold me-2">{{ "%.1f"|format(prediction.confidence * 100) }}%</span>
+                      <div class="progress flex-grow-1" style="height: 8px;">
+                        <div class="progress-bar bg-{% if prediction.confidence > 0.7 %}success{% elif prediction.confidence > 0.4 %}warning{% else %}danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ prediction.confidence * 100 }}%"></div>
+                      </div>
+                    </div>
+                  {% else %}
+                    <span class="text-muted">N/A</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-info" 
+                          data-bs-toggle="tooltip" 
+                          title="Confidence: {{ '%.1f'|format(prediction.confidence * 100) if prediction.confidence else 'N/A' }}%">
+                    <i class="fas fa-info-circle"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if predictions.pages > 1 %}
+        <nav aria-label="Predictions pagination" class="mt-4">
+          <ul class="pagination justify-content-center">
+            {% if predictions.has_prev %}
+              <li class="page-item">
+                <a href="{{ url_for('main.my_predictions', page=predictions.prev_num) }}">&laquo; Previous</a>
+              </li>
+            {% endif %}
+            
+            {% for page_num in predictions.iter_pages() %}
+              {% if page_num %}
+                {% if page_num != predictions.page %}
+                  <li class="page-item">
+                    <a href="{{ url_for('main.my_predictions', page=page_num) }}">{{ page_num }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                  </li>
+                {% endif %}
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">...</span>
+                </li>
+              {% endif %}
+            {% endfor %}
+            
+            {% if predictions.has_next %}
+              <li class="page-item">
+                <a href="{{ url_for('main.my_predictions', page=predictions.next_num) }}">Next &raquo;</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+      <div class="col-md-4">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title">{{ predictions.total }}</h5>
+            <p class="card-text text-muted">Total Predictions</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title text-info">{{ predictions.items|selectattr('prediction', 'equalto', 'Circle')|list|length }}</h5>
+            <p class="card-text text-muted">Circles</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title text-warning">{{ predictions.items|selectattr('prediction', 'equalto', 'Square')|list|length }}</h5>
+            <p class="card-text text-muted">Squares</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-image fa-3x text-muted mb-3"></i>
+      <h4 class="text-muted">No Predictions Yet</h4>
+      <p class="text-muted">Start by uploading your first 28x28 grayscale image to get a prediction.</p>
+      <p><a href="{{ url_for('main.predict') }}" class="btn btn-primary">Make Your First Prediction</a></p>
+    </div>
+  {% endif %}
+</div>
+
+<div style="background: #e9ecef; padding: 20px; border-radius: 5px; margin-top: 30px;">
+    <h3>About Your Predictions</h3>
+    <ul>
+        <li>All your predictions are automatically saved and can be viewed here</li>
+        <li>Confidence scores indicate how certain the model is about its prediction</li>
+        <li>Higher confidence scores generally indicate more reliable predictions</li>
+        <li>Your prediction history is private and only visible to you</li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Initialize tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
+</script>
+{% endblock %} 

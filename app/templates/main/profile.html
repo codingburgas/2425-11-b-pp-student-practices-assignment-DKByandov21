@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Shape Classifier{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Profile Header -->
+        <div class="col-12 mb-4">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            <img src="{{ current_user.get_profile_picture_url() }}" 
+                                 alt="Profile Picture"
+                                 class="rounded-circle border border-3 border-primary shadow-sm mb-3"
+                                 style="width: 140px; height: 140px; object-fit: cover;">
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('main.profile_settings') }}" class="btn btn-outline-primary btn-sm rounded-pill">
+                                    <i class="fas fa-edit me-2"></i>Edit Profile
+                                </a>
+                                <a href="{{ url_for('main.change_password') }}" class="btn btn-outline-warning btn-sm rounded-pill">
+                                    <i class="fas fa-key me-2"></i>Change Password
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h2 class="mb-3 fw-bold">{{ current_user.username }}</h2>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <i class="fas fa-envelope me-2 text-muted"></i>
+                                        <strong>Email:</strong> {{ current_user.email }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-user-tag me-2 text-muted"></i>
+                                        <strong>Role:</strong> 
+                                        <span class="badge bg-{% if current_user.is_admin() %}primary{% else %}secondary{% endif %} rounded-pill px-3 py-2">
+                                            {{ current_user.role.title() }}
+                                        </span>
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-circle me-2 text-muted"></i>
+                                        <strong>Status:</strong> 
+                                        <span class="badge bg-{% if current_user.active %}success{% else %}danger{% endif %} rounded-pill px-3 py-2">
+                                            {{ 'Active' if current_user.active else 'Inactive' }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-2">
+                                        <i class="fas fa-calendar me-2 text-muted"></i>
+                                        <strong>Member since:</strong> {{ current_user.created_at.strftime('%B %d, %Y') }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-chart-bar me-2 text-muted"></i>
+                                        <strong>Total Predictions:</strong> {{ current_user.get_prediction_count() }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-circle me-2 text-info"></i>
+                                        <strong>Circles:</strong> {{ current_user.get_circle_predictions() }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <i class="fas fa-square me-2 text-warning"></i>
+                                        <strong>Squares:</strong> {{ current_user.get_square_predictions() }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Quick Actions -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-lg border-0 rounded-4 h-100">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('main.predict') }}" class="btn btn-primary rounded-pill">
+                            <i class="fas fa-upload me-2"></i>Upload Image
+                        </a>
+                        <a href="{{ url_for('main.my_predictions') }}" class="btn btn-outline-primary rounded-pill">
+                            <i class="fas fa-history me-2"></i>View Predictions
+                        </a>
+                        {% if current_user.is_admin() %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-warning rounded-pill">
+                            <i class="fas fa-cog me-2"></i>Admin Dashboard
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Recent Predictions -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-lg border-0 rounded-4 h-100">
+                <div class="card-header bg-info text-white rounded-top-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-clock me-2"></i>Recent Predictions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prediction in current_user.predictions[:5] %}
+                                    <tr>
+                                        <td>
+                                            <small class="text-muted">{{ prediction.filename[:20] }}{% if prediction.filename|length > 20 %}...{% endif %}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if prediction.prediction == 'Circle' %}info{% else %}warning{% endif %} rounded-pill px-3 py-2">
+                                                {{ prediction.prediction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="progress rounded-pill" style="height: 16px;">
+                                                <div class="progress-bar bg-{% if prediction.prediction == 'Circle' %}info{% else %}warning{% endif %} rounded-pill" 
+                                                     style="width: {{ prediction.confidence * 100 }}%">
+                                                    {{ "%.1f"|format(prediction.confidence * 100) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ prediction.created_at.strftime('%m/%d/%Y') }}</small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('main.my_predictions') }}" class="btn btn-outline-info rounded-pill">
+                                View All Predictions
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No predictions yet</h5>
+                            <p class="text-muted">Start by uploading an image to get your first prediction!</p>
+                            <a href="{{ url_for('main.predict') }}" class="btn btn-primary rounded-pill">
+                                <i class="fas fa-upload me-2"></i>Upload Image
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

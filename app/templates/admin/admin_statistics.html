@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics - Shape Classifier{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Detailed Statistics</h2>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+  </div>
+
+  <!-- User Statistics -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">User Statistics</h5>
+          <div class="row text-center">
+            <div class="col-6">
+              <h3 class="text-primary">{{ total_users }}</h3>
+              <p class="text-muted">Total Users</p>
+            </div>
+            <div class="col-6">
+              <h3 class="text-success">{{ active_users }}</h3>
+              <p class="text-muted">Active Users</p>
+            </div>
+          </div>
+          <div class="row text-center">
+            <div class="col-6">
+              <h3 class="text-info">{{ users_with_predictions }}</h3>
+              <p class="text-muted">Users with Predictions</p>
+            </div>
+            <div class="col-6">
+              <h3 class="text-warning">{{ "%.1f"|format(avg_predictions_per_user) }}</h3>
+              <p class="text-muted">Avg Predictions/User</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Prediction Statistics</h5>
+          <div class="row text-center">
+            <div class="col-6">
+              <h3 class="text-info">{{ circle_predictions }}</h3>
+              <p class="text-muted">Circle Predictions</p>
+            </div>
+            <div class="col-6">
+              <h3 class="text-warning">{{ square_predictions }}</h3>
+              <p class="text-muted">Square Predictions</p>
+            </div>
+          </div>
+          <div class="row text-center">
+            <div class="col-6">
+              <h3 class="text-success">{{ total_predictions }}</h3>
+              <p class="text-muted">Total Predictions</p>
+            </div>
+            <div class="col-6">
+              <h3 class="text-primary">{{ "%.1f"|format(avg_confidence * 100) if avg_confidence else 0 }}%</h3>
+              <p class="text-muted">Avg Confidence</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Most Active User -->
+  {% if most_active_user %}
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Most Active User</h5>
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h6>{{ most_active_user[0].username }}</h6>
+          <p class="text-muted mb-0">{{ most_active_user[0].email }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+          <h4 class="text-primary">{{ most_active_user[1] }}</h4>
+          <p class="text-muted mb-0">predictions</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Prediction Distribution Chart -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Prediction Distribution</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <span>Circles</span>
+              <span class="text-info">{{ circle_predictions }}</span>
+            </div>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar bg-info" 
+                   style="width: {{ (circle_predictions / total_predictions * 100) if total_predictions > 0 else 0 }}%">
+                {{ "%.1f"|format(circle_predictions / total_predictions * 100) if total_predictions > 0 else 0 }}%
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <span>Squares</span>
+              <span class="text-warning">{{ square_predictions }}</span>
+            </div>
+            <div class="progress" style="height: 20px;">
+              <div class="progress-bar bg-warning" 
+                   style="width: {{ (square_predictions / total_predictions * 100) if total_predictions > 0 else 0 }}%">
+                {{ "%.1f"|format(square_predictions / total_predictions * 100) if total_predictions > 0 else 0 }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
