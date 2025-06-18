@@ -1,64 +1,428 @@
+
 {% extends "base.html" %}
 
 {% block title %}Shape Classifier - AI-Powered Image Recognition{% endblock %}
 
-{% block head %}{% endblock %}
+{% block head %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+        color: white;
+        padding: 100px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.3;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        line-height: 1.6;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .hero-cta {
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .hero-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    
+    .features-section {
+        padding: 80px 0;
+        background: var(--surface);
+    }
+    
+    .features-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+        color: var(--text-primary);
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid var(--border);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 2rem;
+        color: white;
+    }
+    
+    .feature-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: var(--text-primary);
+    }
+    
+    .feature-description {
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+    
+    .stats-section {
+        background: var(--primary);
+        color: white;
+        padding: 60px 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .demo-section {
+        padding: 80px 0;
+        background: white;
+    }
+    
+    .demo-preview {
+        background: var(--surface);
+        border-radius: 15px;
+        padding: 40px;
+        text-align: center;
+        border: 2px dashed var(--border);
+    }
+    
+    .demo-icon {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, var(--surface) 0%, white 100%);
+        padding: 80px 0;
+        text-align: center;
+    }
+    
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: var(--text-primary);
+    }
+    
+    .cta-subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 40px;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+    
+    .fade-in:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in:nth-child(3) { animation-delay: 0.4s; }
+    .fade-in:nth-child(4) { animation-delay: 0.6s; }
+    
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .features-title {
+            font-size: 2rem;
+        }
+        
+        .feature-card {
+            margin-bottom: 30px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section text-center">
+<section class="hero-section">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <h1 class="hero-title fade-in">
-                    Instantly Classify Circles & Squares with AI
-                </h1>
-                <p class="hero-desc fade-in">
-                    Upload your image and let our AI-powered platform tell you if it's a <strong>circle</strong> or a <strong>square</strong>—fast, accurate, and beautifully simple.
-                </p>
-                <a href="{{ url_for('main.predict') if current_user.is_authenticated else url_for('auth.register') }}" class="btn btn-primary btn-lg hero-cta fade-in">
-                    <i class="fas fa-rocket me-2"></i>
-                    {{ 'Try Now' if current_user.is_authenticated else 'Get Started' }}
-                </a>
+            <div class="col-lg-10">
+                <div class="hero-content text-center">
+                    <h1 class="hero-title fade-in">
+                        AI-Powered Shape Recognition
+                    </h1>
+                    <p class="hero-subtitle fade-in">
+                        Upload any image and let our advanced AI instantly classify circles and squares with remarkable accuracy. Experience the future of computer vision in seconds.
+                    </p>
+                    <div class="fade-in">
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.predict') }}" class="btn btn-light hero-cta">
+                                <i class="fas fa-camera"></i>
+                                Try AI Recognition
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-light hero-cta">
+                                <i class="fas fa-rocket"></i>
+                                Get Started Free
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section class="py-5" style="background: var(--surface);">
+<section class="features-section">
     <div class="container">
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="feature-card slide-in">
+        <h2 class="features-title">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card fade-in">
                     <div class="feature-icon">
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-upload"></i>
                     </div>
-                    <h3 class="feature-title">Lightning Fast Predictions</h3>
-                    <p class="feature-desc">Upload a 28x28 PNG and get instant shape classification with confidence scores.</p>
+                    <h3 class="feature-title">Upload Your Image</h3>
+                    <p class="feature-description">
+                        Simply drag and drop or select a PNG image (28x28 pixels) containing circles or squares. Our system accepts various image formats for your convenience.
+                    </p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="feature-card slide-in">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card fade-in">
                     <div class="feature-icon">
-                        <i class="fas fa-comments"></i>
+                        <i class="fas fa-brain"></i>
                     </div>
-                    <h3 class="feature-title">Feedback & Learning</h3>
-                    <p class="feature-desc">Submit feedback, view your history, and help us improve the platform for everyone.</p>
+                    <h3 class="feature-title">AI Analysis</h3>
+                    <p class="feature-description">
+                        Our custom-trained Perceptron neural network processes your image in milliseconds, analyzing patterns and features to make accurate predictions.
+                    </p>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="feature-card slide-in">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card fade-in">
                     <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <h3 class="feature-title">Admin Analytics</h3>
-                    <p class="feature-desc">Admins can analyze predictions and feedback with beautiful, interactive analytics tools.</p>
+                    <h3 class="feature-title">Instant Results</h3>
+                    <p class="feature-description">
+                        Get immediate classification results with confidence scores. Track your prediction history and provide feedback to help improve the system.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <span class="stat-number">99%</span>
+                    <span class="stat-label">Accuracy Rate</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <span class="stat-number">&lt;1s</span>
+                    <span class="stat-label">Processing Time</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-item">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Available</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-{% endblock %} 
+<!-- Demo Section -->
+<section class="demo-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <h2 class="features-title">See It In Action</h2>
+                    <p class="hero-subtitle text-muted">
+                        Experience the power of AI-driven shape recognition with real-time processing and detailed confidence scoring.
+                    </p>
+                </div>
+                <div class="demo-preview">
+                    <div class="demo-icon">
+                        <i class="fas fa-shapes"></i>
+                    </div>
+                    <h4 class="mb-3">Interactive Demo</h4>
+                    <p class="text-muted mb-4">
+                        Upload a sample image to see our AI in action. The system will analyze your image and provide instant classification results.
+                    </p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play me-2"></i>
+                            Start Demo
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Sign Up to Try
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2 class="cta-title">Ready to Get Started?</h2>
+                <p class="cta-subtitle">
+                    Join our platform today and experience the future of AI-powered image recognition. It's free, fast, and incredibly accurate.
+                </p>
+                {% if not current_user.is_authenticated %}
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Create Account
+                        </a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Sign In
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-camera me-2"></i>
+                        Start Classifying
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+
+// Add intersection observer for animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+        }
+    });
+}, observerOptions);
+
+// Observe all fade-in elements
+document.querySelectorAll('.fade-in').forEach(el => {
+    observer.observe(el);
+});
+</script>
+{% endblock %}
