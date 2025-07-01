@@ -13,7 +13,7 @@ This package contains machine learning models and utilities:
 from app.ai.perceptron import Perceptron
 from app.ai.logistic_regression import LogisticRegression
 from app.ai.model_utils import save_model, load_model
-from app.ai.synthetic_dataset import generate_circle_square_dataset
+from app.ai.synthetic_dataset import create_synthetic_dataset
 from app.ai.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 __all__ = [
@@ -21,7 +21,7 @@ __all__ = [
     'LogisticRegression', 
     'save_model',
     'load_model',
-    'generate_circle_square_dataset',
+    'create_synthetic_dataset',
     'accuracy_score',
     'precision_score', 
     'recall_score',
