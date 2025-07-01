@@ -237,3 +237,40 @@ def my_feedback():
         page=page, per_page=10, error_out=False
     )
     return render_template('main/my_feedback.html', feedbacks=feedbacks)
+
+@main.route('/model-evaluation')
+@login_required
+def model_evaluation():
+    """Display model evaluation metrics and comparison."""
+    try:
+        from app.ai.metrics import ModelMetrics
+        from app.ai.synthetic_dataset import create_synthetic_dataset
+        
+        # Load both models
+        perceptron_model = load_model('perceptron_model.joblib', Perceptron)
+        
+        try:
+            from app.ai import LogisticRegression
+            logistic_model = load_model('logistic_model.joblib', LogisticRegression)
+        except:
+            logistic_model = None
+        
+        # Generate test data for evaluation
+        X_test, y_test = create_synthetic_dataset(n_samples=1000, noise=0.1, random_state=42)
+        
+        # Evaluate Perceptron
+        perceptron_pred = perceptron_model.predict(X_test)
+        perceptron_metrics = ModelMetrics.calculate_all_metrics(y_test, perceptron_pred)
+        
+        # Evaluate Logistic Regression if available
+        logistic_metrics = None
+        if logistic_model:
+            logistic_pred = logistic_model.predict(X_test)
+            logistic_metrics = ModelMetrics.calculate_all_metrics(y_test, logistic_pred)
+        
+        return render_template('main/model_evaluation.html', 
+                             perceptron_metrics=perceptron_metrics,
+                             logistic_metrics=logistic_metrics)
+    except Exception as e:
+        flash(f'Error loading model evaluation: {str(e)}', 'error')
+        return redirect(url_for('main.predict'))
