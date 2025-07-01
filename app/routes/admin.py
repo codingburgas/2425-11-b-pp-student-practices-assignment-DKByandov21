@@ -164,10 +164,12 @@ def delete_user(user_id):
         username = user.username
         # Delete all predictions by this user first
         Prediction.query.filter_by(user_id=user.id).delete()
+        # Delete all feedback by this user
+        Feedback.query.filter_by(user_id=user.id).delete()
         # Delete the user
         db.session.delete(user)
         db.session.commit()
-        flash(f'{username} and all their predictions have been deleted.', 'success')
+        flash(f'{username} and all their predictions and feedback have been deleted.', 'success')
     return redirect(url_for('admin.users'))
 
 @admin.route('/feedback')
