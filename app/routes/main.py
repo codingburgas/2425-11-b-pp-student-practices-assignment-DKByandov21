@@ -256,7 +256,7 @@ def model_evaluation():
             logistic_model = None
         
         # Generate test data for evaluation
-        X_test, y_test = create_synthetic_dataset(n_samples=1000, noise=0.1, random_state=42)
+        X_test, y_test = create_synthetic_dataset(n_samples_per_class=500, random_seed=42)
         
         # Evaluate Perceptron
         perceptron_pred = perceptron_model.predict(X_test)
