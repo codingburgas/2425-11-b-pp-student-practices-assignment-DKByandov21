@@ -164,7 +164,7 @@
                                         Rate Prediction
                                     </a>
                                 </div>
-                                
+
                                 <!-- Prediction Quality Indicators -->
                                 <div class="alert alert-light mt-3">
                                     <h6><i class="fas fa-info-circle me-2"></i>Prediction Quality</h6>
@@ -185,9 +185,9 @@
                                             <small class="text-muted">
                                                 <strong>Model Type:</strong> {{ model_name }}
                                                 {% if model_type == 'logistic' %}
-                                                    <i class="fas fa-info-circle" title="Probabilistic output with cross-entropy optimization"></i>
+                                                    <i class="fas fa-info-circle" title="Probabilistic output with cross-entropy optimization" data-toggle="tooltip"></i>
                                                 {% else %}
-                                                    <i class="fas fa-info-circle" title="Linear decision boundary with perceptron rule"></i>
+                                                    <i class="fas fa-info-circle" title="Linear decision boundary with perceptron rule" data-toggle="tooltip"></i>
                                                 {% endif %}
                                             </small>
                                         </div>

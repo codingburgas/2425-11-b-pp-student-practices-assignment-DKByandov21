@@ -1,0 +1,13 @@
+
+Hello {{ user.username }},
+
+Welcome to Shape Classifier! To complete your registration, please confirm your email address by clicking the link below:
+
+{{ url_for('auth.confirm_email', token=token, _external=True) }}
+
+This link will expire in 1 hour.
+
+If you did not create this account, please ignore this email.
+
+Best regards,
+Shape Classifier Team

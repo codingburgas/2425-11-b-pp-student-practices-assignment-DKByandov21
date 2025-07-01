@@ -2,6 +2,8 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from app import db
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -11,6 +13,8 @@ class User(UserMixin, db.Model):
     profile_picture = db.Column(db.String(255), nullable=True)  # Store filename of profile picture
     role = db.Column(db.String(20), default='user')  # 'user' or 'admin'
     active = db.Column(db.Boolean, default=True)  # For deactivation
+    confirmed = db.Column(db.Boolean, default=False)  # Email confirmation status
+    confirmed_at = db.Column(db.DateTime, nullable=True)  # When email was confirmed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship to predictions
@@ -43,6 +47,31 @@ class User(UserMixin, db.Model):
             return f'/static/uploads/{self.profile_picture}'
         # Use a default avatar from a service like UI Avatars
         return f'https://ui-avatars.com/api/?name={self.username}&background=random&color=fff&size=200'
+    
+    def generate_confirmation_token(self):
+        """Generate a secure confirmation token"""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps(self.email, salt='email-confirmation')
+    
+    @staticmethod
+    def confirm_token(token, expiration=3600):
+        """Confirm a token and return the user email if valid"""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = serializer.loads(token, salt='email-confirmation', max_age=expiration)
+            return email
+        except:
+            return None
+    
+    def confirm_email(self):
+        """Mark user as confirmed"""
+        self.confirmed = True
+        self.confirmed_at = datetime.utcnow()
+        db.session.commit()
+    
+    def is_confirmed(self):
+        """Check if user email is confirmed"""
+        return self.confirmed
     
     def __repr__(self):
         return f'<User {self.username}>' 
