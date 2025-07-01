@@ -248,6 +248,7 @@ def model_evaluation():
     try:
         from app.ai.metrics import ModelMetrics
         from app.ai.synthetic_dataset import create_synthetic_dataset
+        from sklearn.metrics import confusion_matrix
         
         # Load both models
         perceptron_model = load_model('perceptron_model.joblib', Perceptron)
@@ -265,15 +266,52 @@ def model_evaluation():
         perceptron_pred = perceptron_model.predict(X_test)
         perceptron_metrics = ModelMetrics.calculate_all_metrics(y_test, perceptron_pred)
         
+        # Create confusion matrix for Perceptron
+        cm_perceptron = confusion_matrix(y_test, perceptron_pred)
+        perceptron_cm = {
+            'true_negatives': int(cm_perceptron[0, 0]),
+            'false_positives': int(cm_perceptron[0, 1]),
+            'false_negatives': int(cm_perceptron[1, 0]),
+            'true_positives': int(cm_perceptron[1, 1]),
+            'total': int(len(y_test))
+        }
+        
         # Evaluate Logistic Regression if available
         logistic_metrics = None
+        logistic_cm = None
         if logistic_model:
             logistic_pred = logistic_model.predict(X_test)
             logistic_metrics = ModelMetrics.calculate_all_metrics(y_test, logistic_pred)
+            
+            # Create confusion matrix for Logistic Regression
+            cm_logistic = confusion_matrix(y_test, logistic_pred)
+            logistic_cm = {
+                'true_negatives': int(cm_logistic[0, 0]),
+                'false_positives': int(cm_logistic[0, 1]),
+                'false_negatives': int(cm_logistic[1, 0]),
+                'true_positives': int(cm_logistic[1, 1]),
+                'total': int(len(y_test))
+            }
+        
+        # Create dummy feature importance data (since we don't have Information Gain implemented)
+        feature_importance = {
+            'top_features': []
+        }
+        
+        # Generate top 20 features with dummy data
+        for i in range(20):
+            feature_importance['top_features'].append({
+                'feature_name': f'Pixel_{i*39}',  # Spread across the 28x28 image
+                'feature_idx': i*39,
+                'information_gain': 0.1 - (i * 0.005)  # Decreasing importance
+            })
         
         return render_template('main/model_evaluation.html', 
                              perceptron_metrics=perceptron_metrics,
-                             logistic_metrics=logistic_metrics)
+                             logistic_metrics=logistic_metrics,
+                             perceptron_cm=perceptron_cm,
+                             logistic_cm=logistic_cm,
+                             feature_importance=feature_importance)
     except Exception as e:
         flash(f'Error loading model evaluation: {str(e)}', 'error')
         return redirect(url_for('main.predict'))
