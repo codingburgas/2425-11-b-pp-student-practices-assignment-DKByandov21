@@ -166,7 +166,7 @@ class LogisticRegression:
         Returns:
         --------
         numpy.ndarray
-            Predicted probabilities with shape (n_samples,)
+            Predicted probabilities for class 1 with shape (n_samples,)
         """
         if self.weights is None:
             raise ValueError("Model must be fitted before making predictions")
@@ -177,7 +177,7 @@ class LogisticRegression:
         # Add bias term to features
         X_with_bias = self._add_bias(X)
         
-        # Compute probabilities
+        # Compute probabilities for class 1
         z = np.dot(X_with_bias, self.weights)
         probabilities = self._sigmoid(z)
         
@@ -253,7 +253,7 @@ class LogisticRegression:
             Dictionary mapping feature names to importance scores
         """
         if self.weights is None:
-            raise ValueError("Model must be fitted before accessing feature importance")
+            raise ValueError("Model must be fitted before accessing weights")
         
         feature_weights = np.abs(self.weights[:-1])  # Exclude bias
         

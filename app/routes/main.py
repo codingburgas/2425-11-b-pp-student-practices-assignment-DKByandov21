@@ -153,8 +153,12 @@ def predict():
                     model = load_model('logistic_model.joblib', LogisticRegression)
                     # Make prediction with probability
                     prediction = model.predict(image_array.reshape(1, -1))[0]
-                    probability = model.predict_proba(image_array.reshape(1, -1))[0][prediction]  # Probability of the predicted class
-                    confidence = probability #if prediction == 1 else (1 - probability) # Use probability as confidence
+                    probability = model.predict_proba(image_array.reshape(1, -1))[0]
+                    # For logistic regression, use the probability of the predicted class as confidence
+                    if prediction == 1:
+                        confidence = probability  # Probability of class 1
+                    else:
+                        confidence = 1 - probability  # Probability of class 0
                     model_name = "Logistic Regression"
                 else:
                     model = load_model('perceptron_model.joblib', Perceptron)
