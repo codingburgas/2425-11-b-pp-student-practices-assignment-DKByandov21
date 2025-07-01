@@ -183,10 +183,9 @@ def predict():
                 # Save prediction to database
                 new_prediction = Prediction(
                     user_id=current_user.id,
-                    image_filename=filename,
-                    predicted_class=predicted_class,
-                    confidence=confidence,
-                    timestamp=datetime.now()
+                    filename=filename,
+                    prediction=predicted_class,
+                    confidence=confidence
                 )
                 db.session.add(new_prediction)
                 db.session.commit()
