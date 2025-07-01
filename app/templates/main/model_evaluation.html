@@ -1,0 +1,403 @@
+
+{% extends "base.html" %}
+
+{% block title %}Model Evaluation - Shape Classifier{% endblock %}
+
+{% block head %}
+<style>
+    .metric-card {
+        background: linear-gradient(135deg, var(--surface) 0%, var(--primary-light) 100%);
+        border-radius: var(--radius-md);
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid var(--border);
+        transition: var(--transition);
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .metric-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        opacity: 0.8;
+    }
+    
+    .confusion-matrix {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    
+    .confusion-cell {
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--border);
+        font-weight: 600;
+    }
+    
+    .confusion-cell.header {
+        background: var(--primary-light);
+        color: var(--primary-dark);
+        font-weight: 700;
+    }
+    
+    .confusion-cell.true-positive {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .confusion-cell.true-negative {
+        background: var(--success-light);
+        color: var(--success);
+    }
+    
+    .confusion-cell.false-positive {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .confusion-cell.false-negative {
+        background: var(--danger-light);
+        color: var(--danger);
+    }
+    
+    .feature-importance-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+        transition: var(--transition);
+    }
+    
+    .feature-importance-item:hover {
+        background: var(--surface-hover);
+    }
+    
+    .feature-importance-item:last-child {
+        border-bottom: none;
+    }
+    
+    .importance-bar {
+        width: 100px;
+        height: 8px;
+        background: var(--border-light);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-left: 1rem;
+    }
+    
+    .importance-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        border-radius: 4px;
+    }
+    
+    .model-comparison {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        box-shadow: var(--shadow);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-2">Model Evaluation</h1>
+                    <p class="text-muted">Comprehensive performance metrics for both AI models</p>
+                </div>
+                <a href="{{ url_for('main.predict') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Prediction
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Comparison Overview -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="model-comparison">
+                <h3 class="mb-4">
+                    <i class="fas fa-balance-scale me-2"></i>
+                    Model Comparison
+                </h3>
+                
+                <div class="row g-4">
+                    <!-- Perceptron Metrics -->
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-3">
+                            <span class="badge bg-primary">Perceptron</span>
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">✅</div>
+                                    <span class="metric-value">{{ "%.3f"|format(perceptron_metrics.accuracy) }}</span>
+                                    <div class="metric-label">Accuracy</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">🟡</div>
+                                    <span class="metric-value">{{ "%.3f"|format(perceptron_metrics.precision) }}</span>
+                                    <div class="metric-label">Precision</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">🟠</div>
+                                    <span class="metric-value">{{ "%.3f"|format(perceptron_metrics.recall) }}</span>
+                                    <div class="metric-label">Recall</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">🔵</div>
+                                    <span class="metric-value">{{ "%.3f"|format(perceptron_metrics.f1_score) }}</span>
+                                    <div class="metric-label">F1-Score</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logistic Regression Metrics -->
+                    <div class="col-md-6">
+                        <h5 class="text-center mb-3">
+                            <span class="badge bg-accent">Logistic Regression</span>
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">✅</div>
+                                    <span class="metric-value">{{ "%.3f"|format(logistic_metrics.accuracy) }}</span>
+                                    <div class="metric-label">Accuracy</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">🟡</div>
+                                    <span class="metric-value">{{ "%.3f"|format(logistic_metrics.precision) }}</span>
+                                    <div class="metric-label">Precision</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">🟠</div>
+                                    <span class="metric-value">{{ "%.3f"|format(logistic_metrics.recall) }}</span>
+                                    <div class="metric-label">Recall</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-card">
+                                    <div class="metric-icon">🔵</div>
+                                    <span class="metric-value">{{ "%.3f"|format(logistic_metrics.f1_score) }}</span>
+                                    <div class="metric-label">F1-Score</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Log Loss (only for Logistic Regression) -->
+                        {% if logistic_metrics.log_loss %}
+                        <div class="row g-3 mt-2">
+                            <div class="col-12">
+                                <div class="metric-card">
+                                    <div class="metric-icon">📊</div>
+                                    <span class="metric-value">{{ "%.4f"|format(logistic_metrics.log_loss) }}</span>
+                                    <div class="metric-label">Log Loss</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confusion Matrices -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        🔲 Perceptron Confusion Matrix
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0 confusion-matrix">
+                            <thead>
+                                <tr>
+                                    <th class="confusion-cell header">Predicted →</th>
+                                    <th class="confusion-cell header">Circle</th>
+                                    <th class="confusion-cell header">Square</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th class="confusion-cell header">Circle (Actual)</th>
+                                    <td class="confusion-cell true-negative">{{ perceptron_cm.true_negatives }}</td>
+                                    <td class="confusion-cell false-positive">{{ perceptron_cm.false_positives }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="confusion-cell header">Square (Actual)</th>
+                                    <td class="confusion-cell false-negative">{{ perceptron_cm.false_negatives }}</td>
+                                    <td class="confusion-cell true-positive">{{ perceptron_cm.true_positives }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Total Predictions:</strong> {{ perceptron_cm.total }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        🔲 Logistic Regression Confusion Matrix
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0 confusion-matrix">
+                            <thead>
+                                <tr>
+                                    <th class="confusion-cell header">Predicted →</th>
+                                    <th class="confusion-cell header">Circle</th>
+                                    <th class="confusion-cell header">Square</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th class="confusion-cell header">Circle (Actual)</th>
+                                    <td class="confusion-cell true-negative">{{ logistic_cm.true_negatives }}</td>
+                                    <td class="confusion-cell false-positive">{{ logistic_cm.false_positives }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="confusion-cell header">Square (Actual)</th>
+                                    <td class="confusion-cell false-negative">{{ logistic_cm.false_negatives }}</td>
+                                    <td class="confusion-cell true-positive">{{ logistic_cm.true_positives }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <strong>Total Predictions:</strong> {{ logistic_cm.total }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Importance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-brain me-2"></i>
+                        Feature Importance Analysis
+                    </h5>
+                    <small class="text-muted">Top 20 most informative pixels based on Information Gain</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            {% for feature in feature_importance.top_features %}
+                            <div class="feature-importance-item">
+                                <div>
+                                    <strong>{{ feature.feature_name }}</strong>
+                                    <small class="text-muted d-block">Index: {{ feature.feature_idx }}</small>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">{{ "%.4f"|format(feature.information_gain) }}</span>
+                                    <div class="importance-bar">
+                                        <div class="importance-fill" style="width: {{ (feature.information_gain / feature_importance.top_features[0].information_gain * 100)|round(1) }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>Information Gain</h6>
+                                <p class="mb-0 small">
+                                    Information Gain measures how much each pixel contributes to distinguishing between circles and squares. 
+                                    Higher values indicate more discriminative features.
+                                </p>
+                            </div>
+                            
+                            <div class="alert alert-secondary">
+                                <h6><i class="fas fa-lightbulb me-2"></i>Interpretation</h6>
+                                <p class="mb-0 small">
+                                    Pixels near the center and edges typically have higher importance for shape classification, 
+                                    as they capture the key geometric differences between circles and squares.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add tooltips for metric explanations
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips if available
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+    
+    // Add smooth animations to metric cards
+    const metricCards = document.querySelectorAll('.metric-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
+            }
+        });
+    });
+    
+    metricCards.forEach(card => observer.observe(card));
+});
+</script>
+{% endblock %}

@@ -7,6 +7,102 @@
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload Image for Classification
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <label for="model_type" class="form-label">Select AI Model</label>
+                        <select class="form-select" id="model_type" name="model_type">
+                            <option value="perceptron" {% if model_type == 'perceptron' %}selected{% endif %}>
+                                Perceptron (Linear Classifier)
+                            </option>
+                            <option value="logistic" {% if model_type == 'logistic' %}selected{% endif %}>
+                                Logistic Regression (Probabilistic)
+                            </option>
+                        </select>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Choose between our linear Perceptron or probabilistic Logistic Regression model.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Choose Image File</label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".png,.jpg,.jpeg" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Upload a PNG, JPG, or JPEG image. Best results with 28x28 pixel images containing clear circles or squares.
+                        </div>
+                        <div class="invalid-feedback">
+                            Please select a valid image file.
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-brain me-2"></i>
+                            Classify Image
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+            <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    Upload Image for Classification
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <label for="model_type" class="form-label">Select AI Model</label>
+                        <select class="form-select" id="model_type" name="model_type">
+                            <option value="perceptron" {% if model_type == 'perceptron' %}selected{% endif %}>
+                                Perceptron (Linear Classifier)
+                            </option>
+                            <option value="logistic" {% if model_type == 'logistic' %}selected{% endif %}>
+                                Logistic Regression (Probabilistic)
+                            </option>
+                        </select>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Choose between our linear Perceptron or probabilistic Logistic Regression model.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Choose Image File</label>
+                        <input type="file" class="form-control" id="file" name="file" 
+                               accept=".png,.jpg,.jpeg" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Upload a PNG, JPG, or JPEG image. Best results with 28x28 pixel images containing clear circles or squares.
+                        </div>
+                        <div class="invalid-feedback">
+                            Please select a valid image file.
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-brain me-2"></i>
+                            Classify Image
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+            <div class="card shadow-sm mt-4">
                 <div class="card-body">
                     <h2 class="card-title text-center mb-4">
                         <i class="fas fa-brain text-primary me-2"></i>Shape Prediction
@@ -102,7 +198,78 @@
                     </div>
                 </div>
             </div>
+
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Prediction Result
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        {% if image_filename %}
+                        <div class="text-center">
+                            <img src="{{ url_for('static', filename='uploads/' + image_filename) }}" 
+                                 alt="Uploaded Image" class="img-fluid rounded border" 
+                                 style="max-width: 200px; image-rendering: pixelated;">
+                            <p class="text-muted mt-2 small">Processed Image (28x28)</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-8">
+                        <div class="result-details">
+                            <div class="d-flex align-items-center mb-3">
+                                <h4 class="mb-0 me-3">
+                                    <span class="badge bg-primary fs-6">{{ prediction }}</span>
+                                </h4>
+                                {% if model_name %}
+                                <span class="badge bg-secondary">{{ model_name }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Confidence Score:</label>
+                                <div class="progress mb-2" style="height: 25px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ (confidence * 100)|round(1) }}%"
+                                         aria-valuenow="{{ (confidence * 100)|round(1) }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        {{ (confidence * 100)|round(1) }}%
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    {% if model_type == 'logistic' %}
+                                    Probability-based confidence from logistic regression model.
+                                    {% else %}
+                                    Distance-based confidence from perceptron decision boundary.
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>How it works:</strong> 
+                                {% if model_type == 'logistic' %}
+                                The Logistic Regression model uses a sigmoid function to output probabilities for each class, providing smooth confidence estimates.
+                                {% else %}
+                                The Perceptron model uses a linear decision boundary to classify shapes, with confidence based on distance from the boundary.
+                                {% endif %}
+                            </div>
+
+                            <div class="mt-3">
+                                <a href="{{ url_for('main.model_evaluation') }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    View Model Metrics
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

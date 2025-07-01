@@ -11,6 +11,8 @@ from app.models.feedback import Feedback
 from app.ai.perceptron import Perceptron
 from app.ai.model_utils import load_model
 from app.forms import ProfileUpdateForm, PasswordChangeForm, FeedbackForm
+import io
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 
@@ -26,6 +28,9 @@ def get_model():
             current_app.perceptron_model = None
             print("Warning: Model file not found. Please train the model first.")
     return current_app.perceptron_model
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
 
 @main.route('/')
 def index():
@@ -43,11 +48,11 @@ def profile_settings():
         original_username=current_user.username,
         original_email=current_user.email
     )
-    
+
     if form.validate_on_submit():
         current_user.username = form.username.data
         current_user.email = form.email.data
-        
+
         # Handle profile picture upload
         if form.profile_picture.data:
             file = form.profile_picture.data
@@ -57,11 +62,11 @@ def profile_settings():
                 # Add user ID to make filename unique
                 name, ext = os.path.splitext(filename)
                 filename = f"{current_user.id}_{name}{ext}"
-                
+
                 # Save the file
                 filepath = os.path.join(current_app.root_path, 'static', 'uploads', filename)
                 file.save(filepath)
-                
+
                 # Resize image to 200x200 for consistency
                 try:
                     with Image.open(filepath) as img:
@@ -71,25 +76,25 @@ def profile_settings():
                 except Exception as e:
                     flash(f'Error processing image: {str(e)}', 'error')
                     return redirect(url_for('main.profile_settings'))
-                
+
                 # Update database
                 current_user.profile_picture = filename
-        
+
         db.session.commit()
         flash('Profile updated successfully!', 'success')
         return redirect(url_for('main.profile'))
-    
+
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.email.data = current_user.email
-    
+
     return render_template('main/profile_settings.html', form=form)
 
 @main.route('/profile/change-password', methods=['GET', 'POST'])
 @login_required
 def change_password():
     form = PasswordChangeForm()
-    
+
     if form.validate_on_submit():
         if current_user.check_password(form.current_password.data):
             current_user.set_password(form.new_password.data)
@@ -98,7 +103,7 @@ def change_password():
             return redirect(url_for('main.profile'))
         else:
             flash('Current password is incorrect', 'error')
-    
+
     return render_template('main/change_password.html', form=form)
 
 @main.route('/my-predictions')
@@ -116,64 +121,99 @@ def my_predictions():
 @login_required
 def predict():
     if request.method == 'POST':
+        # Check if file was uploaded
         if 'file' not in request.files:
-            flash('No file selected', 'error')
+            flash('No file selected', 'danger')
             return redirect(request.url)
-        
+
         file = request.files['file']
         if file.filename == '':
-            flash('No file selected', 'error')
+            flash('No file selected', 'danger')
             return redirect(request.url)
-        
-        if file and file.filename.lower().endswith('.png'):
-            # Load the trained model using model_utils
-            from app.ai.model_utils import load_model
-            from app.ai.perceptron import Perceptron
-            
+
+        # Get selected model type
+        model_type = request.form.get('model_type', 'perceptron')
+
+        if file and allowed_file(file.filename):
             try:
-                model = load_model('perceptron_model.joblib', Perceptron)
-                
-                # Preprocess the image
-                img = Image.open(file.stream).convert('L')  # Convert to grayscale
-                img = img.resize((28, 28))  # Resize to 28x28
-                img_array = np.array(img, dtype=np.float32).flatten() / 255.0  # Normalize to [0,1]
-                
-                # Ensure it's a 2D array for prediction (samples, features)
-                img_array = img_array.reshape(1, -1)
-                
-                # Make prediction
-                prediction = model.predict(img_array)[0]
-                
-                # Calculate confidence based on distance from decision boundary
-                weights, bias = model.get_weights()
-                decision_value = np.dot(img_array[0], weights) + bias
-                confidence = min(abs(decision_value) / 10.0, 1.0)  # Normalize to 0-1
-                
-                # Store prediction in database
+                # Read and process the image
+                image = Image.open(io.BytesIO(file.read()))
+
+                # Convert to grayscale and resize to 28x28
+                image = image.convert('L')
+                image = image.resize((28, 28))
+
+                # Convert to numpy array and normalize
+                image_array = np.array(image, dtype=np.float32)
+                image_array = image_array / 255.0  # Normalize to 0-1
+                image_array = image_array.flatten()  # Flatten to 1D array
+
+                # Load the appropriate model
+                if model_type == 'logistic':
+                    # Assuming LogisticRegression is defined or imported elsewhere
+                    from app.ai.logistic_regression import LogisticRegression  # Import here to avoid circular import issues
+                    model = load_model('logistic_model.joblib', LogisticRegression)
+                    # Make prediction with probability
+                    prediction = model.predict(image_array.reshape(1, -1))[0]
+                    probability = model.predict_proba(image_array.reshape(1, -1))[0][prediction]  # Probability of the predicted class
+                    confidence = probability #if prediction == 1 else (1 - probability) # Use probability as confidence
+                    model_name = "Logistic Regression"
+                else:
+                    model = load_model('perceptron_model.joblib', Perceptron)
+                    # Make prediction
+                    prediction = model.predict(image_array.reshape(1, -1))[0]
+                    # Calculate confidence (distance from decision boundary)
+                    weights, bias = model.get_weights()
+                    z = np.dot(image_array, weights) + bias
+                    confidence = abs(z)  # Distance from decision boundary
+                    confidence = min(confidence * 10, 1.0)  # Scale and cap at 1.0
+                    model_name = "Perceptron"
+
+                # Convert prediction to label
+                predicted_class = 'Square' if prediction == 1 else 'Circle'
+
+                # Save uploaded file
+                filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"{current_user.id}_{timestamp}_{filename}"
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+
+                # Save the processed image
+                processed_image = Image.fromarray((image_array.reshape(28, 28) * 255).astype(np.uint8))
+                processed_image.save(filepath)
+
+                # Save prediction to database
                 new_prediction = Prediction(
-                    filename=file.filename,
-                    prediction='Circle' if prediction == 0 else 'Square',
+                    user_id=current_user.id,
+                    image_filename=filename,
+                    predicted_class=predicted_class,
                     confidence=confidence,
-                    user_id=current_user.id
+                    timestamp=datetime.now()
                 )
                 db.session.add(new_prediction)
                 db.session.commit()
-                
-                result = 'Circle' if prediction == 0 else 'Square'
-                flash(f'Prediction: {result} (Confidence: {confidence:.2f})', 'success')
-                
+
+                flash(f'Prediction complete! Model: {model_name}, Result: {predicted_class} (Confidence: {confidence:.2f})', 'success')
+                return render_template('main/predict.html', 
+                                     prediction=predicted_class, 
+                                     confidence=confidence,
+                                     image_filename=filename,
+                                     model_type=model_type,
+                                     model_name=model_name)
+
             except Exception as e:
-                flash(f'Error processing image: {str(e)}', 'error')
+                flash(f'Error processing image: {str(e)}', 'danger')
+                return redirect(request.url)
         else:
-            flash('Please upload a PNG file', 'error')
-    
+            flash('Invalid file type. Please upload a PNG, JPG, or JPEG image.', 'danger')
+
     return render_template('main/predict.html')
 
 @main.route('/feedback', methods=['GET', 'POST'])
 @login_required
 def feedback():
     form = FeedbackForm()
-    
+
     if form.validate_on_submit():
         feedback = Feedback(
             rating=form.rating.data,
@@ -183,10 +223,10 @@ def feedback():
         )
         db.session.add(feedback)
         db.session.commit()
-        
+
         flash('Thank you for your feedback!', 'success')
         return redirect(url_for('main.feedback'))
-    
+
     return render_template('main/feedback.html', form=form)
 
 @main.route('/my-feedback')
@@ -198,4 +238,4 @@ def my_feedback():
     ).paginate(
         page=page, per_page=10, error_out=False
     )
-    return render_template('main/my_feedback.html', feedbacks=feedbacks) 
+    return render_template('main/my_feedback.html', feedbacks=feedbacks)

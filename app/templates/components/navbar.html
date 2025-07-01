@@ -20,6 +20,16 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('main.predict') }}">
+            <i class="fas fa-camera me-1"></i>Predict
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('main.model_evaluation') }}">
+            <i class="fas fa-chart-bar me-1"></i>Model Metrics
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link{% if request.endpoint == 'main.my_predictions' %} active{% endif %}" href="{{ url_for('main.my_predictions') }}">
             <i class="fas fa-history me-1"></i>My Predictions
           </a>
@@ -120,4 +130,4 @@
     box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.10);
   }
 }
-</style> 
+</style>
