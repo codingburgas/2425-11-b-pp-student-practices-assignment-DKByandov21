@@ -10,27 +10,36 @@ This package contains machine learning models and utilities:
 - metrics: Evaluation metrics and utilities
 """
 
-from app.ai.perceptron import Perceptron
-from app.ai.logistic_regression import LogisticRegression
-from app.ai.model_utils import save_model, load_model
-from app.ai.synthetic_dataset import create_synthetic_dataset
-from app.ai.metrics import ModelMetrics
+from .perceptron import Perceptron
+from .logistic_regression import LogisticRegression
+from .model_utils import save_model, load_model
+from .synthetic_dataset import create_synthetic_dataset
+from .metrics import ModelMetrics, InformationGain
 
 # Create convenience functions that wrap the ModelMetrics static methods
 def accuracy_score(y_true, y_pred):
+    """Calculate accuracy score."""
     return ModelMetrics.accuracy(y_true, y_pred)
 
 def precision_score(y_true, y_pred):
+    """Calculate precision score."""
     return ModelMetrics.precision(y_true, y_pred)
 
 def recall_score(y_true, y_pred):
+    """Calculate recall score."""
     return ModelMetrics.recall(y_true, y_pred)
 
 def f1_score(y_true, y_pred):
+    """Calculate F1 score."""
     return ModelMetrics.f1_score(y_true, y_pred)
 
 def confusion_matrix(y_true, y_pred):
+    """Calculate confusion matrix."""
     return ModelMetrics.confusion_matrix(y_true, y_pred)
+
+def log_loss(y_true, y_pred_proba):
+    """Calculate log loss."""
+    return ModelMetrics.log_loss(y_true, y_pred_proba)
 
 __all__ = [
     'Perceptron',
@@ -38,9 +47,12 @@ __all__ = [
     'save_model',
     'load_model',
     'create_synthetic_dataset',
+    'ModelMetrics',
+    'InformationGain',
     'accuracy_score',
     'precision_score', 
     'recall_score',
     'f1_score',
-    'confusion_matrix'
+    'confusion_matrix',
+    'log_loss'
 ]
