@@ -199,6 +199,7 @@
                 </div>
             </div>
 
+        {% if prediction is defined %}
         <div class="card shadow-sm mt-4">
             <div class="card-header bg-success text-white">
                 <h3 class="card-title mb-0">
@@ -224,11 +225,12 @@
                                 <h4 class="mb-0 me-3">
                                     <span class="badge bg-primary fs-6">{{ prediction }}</span>
                                 </h4>
-                                {% if model_name %}
+                                {% if model_name is defined %}
                                 <span class="badge bg-secondary">{{ model_name }}</span>
                                 {% endif %}
                             </div>
 
+                            {% if confidence is defined %}
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Confidence Score:</label>
                                 <div class="progress mb-2" style="height: 25px;">
@@ -247,11 +249,12 @@
                                     {% endif %}
                                 </small>
                             </div>
+                            {% endif %}
 
                             <div class="alert alert-info">
                                 <i class="fas fa-lightbulb me-2"></i>
                                 <strong>How it works:</strong> 
-                                {% if model_type == 'logistic' %}
+                                {% if model_type is defined and model_type == 'logistic' %}
                                 The Logistic Regression model uses a sigmoid function to output probabilities for each class, providing smooth confidence estimates.
                                 {% else %}
                                 The Perceptron model uses a linear decision boundary to classify shapes, with confidence based on distance from the boundary.
@@ -269,6 +272,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         </div>
     </div>
 </div>
