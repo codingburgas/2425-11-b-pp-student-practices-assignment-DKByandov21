@@ -154,10 +154,44 @@
 
                                 <div class="mt-3">
                                     <a href="{{ url_for('main.model_evaluation') }}"
-                                        class="btn btn-outline-primary btn-sm">
+                                        class="btn btn-outline-primary btn-sm me-2">
                                         <i class="fas fa-chart-bar me-1"></i>
                                         View Model Metrics
                                     </a>
+                                    <a href="{{ url_for('main.feedback') }}"
+                                        class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-star me-1"></i>
+                                        Rate Prediction
+                                    </a>
+                                </div>
+                                
+                                <!-- Prediction Quality Indicators -->
+                                <div class="alert alert-light mt-3">
+                                    <h6><i class="fas fa-info-circle me-2"></i>Prediction Quality</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                <strong>Confidence Level:</strong>
+                                                {% if confidence >= 0.8 %}
+                                                    <span class="badge bg-success">High</span> ({{ (confidence * 100)|round(1) }}%)
+                                                {% elif confidence >= 0.6 %}
+                                                    <span class="badge bg-warning">Medium</span> ({{ (confidence * 100)|round(1) }}%)
+                                                {% else %}
+                                                    <span class="badge bg-danger">Low</span> ({{ (confidence * 100)|round(1) }}%)
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                <strong>Model Type:</strong> {{ model_name }}
+                                                {% if model_type == 'logistic' %}
+                                                    <i class="fas fa-info-circle" title="Probabilistic output with cross-entropy optimization"></i>
+                                                {% else %}
+                                                    <i class="fas fa-info-circle" title="Linear decision boundary with perceptron rule"></i>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

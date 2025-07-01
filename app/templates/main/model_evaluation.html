@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Model Evaluation - Shape Classifier{% endblock %}
@@ -13,12 +12,12 @@
         border: 1px solid var(--border);
         transition: var(--transition);
     }
-    
+
     .metric-card:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
     }
-    
+
     .metric-value {
         font-size: 2rem;
         font-weight: 700;
@@ -26,60 +25,60 @@
         display: block;
         margin-bottom: 0.5rem;
     }
-    
+
     .metric-label {
         font-size: 0.9rem;
         color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 1px;
     }
-    
+
     .metric-icon {
         font-size: 2rem;
         margin-bottom: 1rem;
         opacity: 0.8;
     }
-    
+
     .confusion-matrix {
         background: var(--surface);
         border-radius: var(--radius-md);
         overflow: hidden;
         box-shadow: var(--shadow);
     }
-    
+
     .confusion-cell {
         padding: 1rem;
         text-align: center;
         border: 1px solid var(--border);
         font-weight: 600;
     }
-    
+
     .confusion-cell.header {
         background: var(--primary-light);
         color: var(--primary-dark);
         font-weight: 700;
     }
-    
+
     .confusion-cell.true-positive {
         background: var(--success-light);
         color: var(--success);
     }
-    
+
     .confusion-cell.true-negative {
         background: var(--success-light);
         color: var(--success);
     }
-    
+
     .confusion-cell.false-positive {
         background: var(--danger-light);
         color: var(--danger);
     }
-    
+
     .confusion-cell.false-negative {
         background: var(--danger-light);
         color: var(--danger);
     }
-    
+
     .feature-importance-item {
         display: flex;
         justify-content: space-between;
@@ -88,15 +87,15 @@
         border-bottom: 1px solid var(--border-light);
         transition: var(--transition);
     }
-    
+
     .feature-importance-item:hover {
         background: var(--surface-hover);
     }
-    
+
     .feature-importance-item:last-child {
         border-bottom: none;
     }
-    
+
     .importance-bar {
         width: 100px;
         height: 8px;
@@ -105,13 +104,13 @@
         overflow: hidden;
         margin-left: 1rem;
     }
-    
+
     .importance-fill {
         height: 100%;
         background: linear-gradient(90deg, var(--primary), var(--accent));
         border-radius: 4px;
     }
-    
+
     .model-comparison {
         background: var(--surface);
         border-radius: var(--radius-md);
@@ -145,7 +144,7 @@
                     <i class="fas fa-balance-scale me-2"></i>
                     Model Comparison
                 </h3>
-                
+
                 <div class="row g-4">
                     <!-- Perceptron Metrics -->
                     <div class="col-md-6">
@@ -219,7 +218,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Log Loss (only for Logistic Regression) -->
                         {% if logistic_metrics.log_loss %}
                         <div class="row g-3 mt-2">
@@ -358,7 +357,7 @@
                                     Higher values indicate more discriminative features.
                                 </p>
                             </div>
-                            
+
                             <div class="alert alert-secondary">
                                 <h6><i class="fas fa-lightbulb me-2"></i>Interpretation</h6>
                                 <p class="mb-0 small">
@@ -372,32 +371,27 @@
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-// Add tooltips for metric explanations
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap tooltips if available
-    if (typeof bootstrap !== 'undefined') {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    }
-    
-    // Add smooth animations to metric cards
-    const metricCards = document.querySelectorAll('.metric-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
-            }
-        });
-    });
-    
-    metricCards.forEach(card => observer.observe(card));
-});
-</script>
-{% endblock %}
+                <!-- Metric Explanations -->
+                <div class="metric-explanation">
+                    <h6><i class="fas fa-graduation-cap me-2"></i>Understanding the Metrics</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li><strong>✅ Accuracy:</strong> Overall correctness (TP+TN)/(TP+TN+FP+FN)</li>
+                                <li><strong>🟡 Precision:</strong> Of predicted positives, how many were correct TP/(TP+FP)</li>
+                                <li><strong>🟠 Recall:</strong> Of actual positives, how many were found TP/(TP+FN)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled small">
+                                <li><strong>🔵 F1-Score:</strong> Harmonic mean of precision and recall</li>
+                                <li><strong>📊 Log Loss:</strong> Measures probability prediction quality (lower is better)</li>
+                                <li><strong>🔲 Confusion Matrix:</strong> Breakdown of correct/incorrect predictions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

@@ -38,7 +38,33 @@ def index():
 @main.route('/profile')
 @login_required
 def profile():
-    return render_template('main/profile.html')
+    # Calculate user's prediction accuracy metrics
+    user_predictions = Prediction.query.filter_by(user_id=current_user.id).all()
+    user_feedbacks = Feedback.query.filter_by(user_id=current_user.id).all()
+    
+    # Calculate basic statistics
+    total_predictions = len(user_predictions)
+    total_feedback = len(user_feedbacks)
+    
+    # Calculate average confidence
+    avg_confidence = 0
+    if total_predictions > 0:
+        avg_confidence = sum(p.confidence for p in user_predictions) / total_predictions
+    
+    # Calculate average rating
+    avg_rating = 0
+    if total_feedback > 0:
+        avg_rating = sum(f.rating for f in user_feedbacks) / total_feedback
+    
+    # Group predictions by model type if available
+    prediction_stats = {
+        'total': total_predictions,
+        'avg_confidence': avg_confidence,
+        'avg_rating': avg_rating,
+        'total_feedback': total_feedback
+    }
+    
+    return render_template('main/profile.html', prediction_stats=prediction_stats)
 
 @main.route('/profile/settings', methods=['GET', 'POST'])
 @login_required
@@ -160,6 +186,10 @@ def predict():
                     else:
                         confidence = 1 - probability  # Probability of class 0
                     model_name = "Logistic Regression"
+                    
+                    # Calculate log loss for this single prediction
+                    from app.ai.metrics import ModelMetrics
+                    log_loss_value = ModelMetrics.log_loss(np.array([prediction]), np.array([probability]))
                 else:
                     model = load_model('perceptron_model.joblib', Perceptron)
                     # Make prediction
@@ -195,12 +225,22 @@ def predict():
                 db.session.commit()
 
                 flash(f'Prediction complete! Model: {model_name}, Result: {predicted_class} (Confidence: {confidence:.2f})', 'success')
+                
+                # Prepare additional metrics for display
+                additional_metrics = {}
+                if model_type == 'logistic':
+                    additional_metrics['log_loss'] = log_loss_value
+                    additional_metrics['probability'] = probability
+                else:
+                    additional_metrics['decision_distance'] = abs(z)
+                
                 return render_template('main/predict.html', 
                                      prediction=predicted_class, 
                                      confidence=confidence,
                                      image_filename=filename,
                                      model_type=model_type,
-                                     model_name=model_name)
+                                     model_name=model_name,
+                                     additional_metrics=additional_metrics)
 
             except Exception as e:
                 flash(f'Error processing image: {str(e)}', 'danger')

@@ -76,7 +76,7 @@
         font-size: 2rem;
         gap: 0.15rem;
     }
-    
+
     .star-rating label {
         padding: 0.2rem;
     }
@@ -87,11 +87,11 @@
         font-size: 1.75rem;
         gap: 0.1rem;
     }
-    
+
     .star-rating label {
         padding: 0.15rem;
     }
-    
+
     .rating-label {
         font-size: 1rem;
     }
@@ -286,9 +286,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     const submitBtn = form.querySelector('button[type="submit"]');
     const ratingContainer = document.querySelector('.star-rating');
-    
+
     let currentRating = 0;
-    
+
     // Initialize with existing value if any
     radios.forEach((radio, idx) => {
         if (radio.checked) {
@@ -296,15 +296,15 @@ document.addEventListener('DOMContentLoaded', function() {
             updateStarDisplay(currentRating);
         }
     });
-    
+
     // Star hover effects
     stars.forEach((star, idx) => {
         const rating = idx + 1;
-        
+
         star.addEventListener('mouseenter', function() {
             updateStarDisplay(rating, true);
         });
-        
+
         star.addEventListener('click', function() {
             currentRating = rating;
             radios[idx].checked = true;
@@ -313,20 +313,22 @@ document.addEventListener('DOMContentLoaded', function() {
             updateRatingLabel(rating);
         });
     });
-    
+
     // Reset to current rating on mouse leave
     ratingContainer.addEventListener('mouseleave', function() {
         updateStarDisplay(currentRating);
     });
-    
+
     // Form validation
     form.addEventListener('submit', function(e) {
-        if (currentRating === 0) {
+        // Get selected rating value
+        const selectedRating = document.querySelector('input[name="rating"]:checked');
+        if (!selectedRating || !selectedRating.value) {
             e.preventDefault();
             showErrorState();
             return false;
         }
-        
+
         // Double-check the radio value is set correctly
         const selectedRadio = document.querySelector('.star-rating input[type="radio"]:checked');
         if (!selectedRadio || parseInt(selectedRadio.value) !== currentRating) {
@@ -334,29 +336,29 @@ document.addEventListener('DOMContentLoaded', function() {
             radios[currentRating - 1].checked = true;
         }
     });
-    
+
     function updateStarDisplay(rating, isHover = false) {
         stars.forEach((star, idx) => {
             const starRating = idx + 1;
             star.classList.remove('selected', 'hover');
-            
+
             if (starRating <= rating) {
                 star.classList.add(isHover ? 'hover' : 'selected');
             }
         });
     }
-    
+
     function showErrorState() {
         ratingContainer.classList.add('error');
         const errorMsg = document.getElementById('rating-error');
         if (errorMsg) {
             errorMsg.style.display = 'block';
         }
-        
+
         // Scroll to rating section
         ratingContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-    
+
     function removeErrorState() {
         ratingContainer.classList.remove('error');
         const errorMsg = document.getElementById('rating-error');
@@ -364,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
             errorMsg.style.display = 'none';
         }
     }
-    
+
     function updateRatingLabel(rating) {
         const labels = {
             1: 'Very Poor',
@@ -373,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             4: 'Good',
             5: 'Excellent'
         };
-        
+
         const labelElement = document.getElementById('rating-label');
         if (labelElement) {
             labelElement.textContent = labels[rating];
@@ -382,4 +384,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %} 
+{% endblock %}
