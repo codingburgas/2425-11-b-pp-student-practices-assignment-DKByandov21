@@ -1,7 +1,2 @@
-import os
- 
-class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_ENABLED = True 
+# This file has been moved to instance/config.py
+# Please update any imports to use: from instance.config import config 

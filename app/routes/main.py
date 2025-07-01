@@ -8,8 +8,7 @@ from app import db
 from app.models.user import User
 from app.models.prediction import Prediction
 from app.models.feedback import Feedback
-from app.ai.perceptron import Perceptron
-from app.ai.model_utils import load_model
+from app.ai import Perceptron, load_model
 from app.forms import ProfileUpdateForm, PasswordChangeForm, FeedbackForm
 import io
 from datetime import datetime
@@ -150,8 +149,7 @@ def predict():
 
                 # Load the appropriate model
                 if model_type == 'logistic':
-                    # Assuming LogisticRegression is defined or imported elsewhere
-                    from app.ai.logistic_regression import LogisticRegression  # Import here to avoid circular import issues
+                    from app.ai import LogisticRegression
                     model = load_model('logistic_model.joblib', LogisticRegression)
                     # Make prediction with probability
                     prediction = model.predict(image_array.reshape(1, -1))[0]

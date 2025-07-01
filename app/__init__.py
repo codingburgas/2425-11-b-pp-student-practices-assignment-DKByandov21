@@ -1,19 +1,17 @@
+
 """
 Flask Application Factory for Shape Classifier.
 
 This module contains the application factory pattern implementation for the
 Shape Classifier web application. It initializes Flask extensions and
 registers blueprints for modular organization.
-
-The application uses a factory pattern to allow for different configurations
-(development, testing, production) and to enable proper testing.
 """
 
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
-from config import Config
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -21,66 +19,70 @@ login_manager = LoginManager()
 migrate = Migrate()
 
 
-def create_app(config_class=Config):
+def create_app(config_name=None):
     """
     Create and configure a Flask application instance.
     
-    This function implements the application factory pattern, creating
-    a Flask app with the specified configuration and initializing all
-    extensions and blueprints.
-    
     Args:
-        config_class: Configuration class to use for the application.
-                      Defaults to Config from config.py.
+        config_name: Configuration name ('development', 'production', 'testing')
+                    Defaults to FLASK_CONFIG environment variable or 'default'
     
     Returns:
         Flask: Configured Flask application instance.
-    
-    Example:
-        >>> app = create_app()
-        >>> app.run(debug=True)
     """
-    # Create Flask application instance
     app = Flask(__name__)
-    app.config.from_object(config_class)
     
-    # Initialize extensions with the application
+    # Load configuration
+    if config_name is None:
+        config_name = os.environ.get('FLASK_CONFIG', 'default')
+    
+    from instance.config import config
+    app.config.from_object(config[config_name])
+    
+    # Ensure upload folder exists
+    upload_folder = app.config.get('UPLOAD_FOLDER')
+    if upload_folder and not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    
+    # Initialize extensions with app
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
     
-    # Configure login manager settings
+    # Configure login manager
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
+    login_manager.login_message = 'Please log in to access this page.'
     
-    # Import and register blueprints for modular organization
-    from app.routes.auth import auth
-    from app.routes.main import main
-    from app.routes.admin import admin
-    app.register_blueprint(auth, url_prefix="/auth", template_folder="templates")
-    app.register_blueprint(main, url_prefix="/", template_folder="templates")
-    app.register_blueprint(admin, url_prefix="/admin", template_folder="templates")
+    # Register blueprints
+    from app.routes.auth import auth as auth_blueprint
+    from app.routes.main import main as main_blueprint
+    from app.routes.admin import admin as admin_blueprint
     
-    # Import models to ensure they're registered with SQLAlchemy
-    # This is necessary for migrations and database operations
-    from app.models.user import User
-    from app.models.prediction import Prediction
+    app.register_blueprint(auth_blueprint, url_prefix='/auth')
+    app.register_blueprint(main_blueprint)
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
     
-    # User loader function for Flask-Login
+    # Import models to register with SQLAlchemy
+    from app.models import user, prediction, feedback
+    
+    # User loader for Flask-Login
     @login_manager.user_loader
     def load_user(user_id):
-        """
-        Load user by ID for Flask-Login.
-        
-        This function is called by Flask-Login to load a user from the
-        database when needed for session management.
-        
-        Args:
-            user_id (str): The user ID as a string.
-        
-        Returns:
-            User: User object if found, None otherwise.
-        """
+        """Load user by ID for Flask-Login."""
+        from app.models.user import User
         return User.query.get(int(user_id))
     
-    return app 
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        from flask import render_template
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        from flask import render_template
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
+    
+    return app
