@@ -216,17 +216,42 @@ def feedback():
     form = FeedbackForm()
 
     if form.validate_on_submit():
-        feedback = Feedback(
-            rating=form.rating.data,
-            comment=form.comment.data,
-            is_public=form.is_public.data,
-            user_id=current_user.id
-        )
-        db.session.add(feedback)
-        db.session.commit()
+        try:
+            # Ensure rating is valid integer between 1-5
+            rating_value = int(form.rating.data)
+            if rating_value < 1 or rating_value > 5:
+                flash('Invalid rating value. Please select a rating between 1 and 5 stars.', 'danger')
+                return render_template('main/feedback.html', form=form)
+            
+            # Create new feedback
+            feedback = Feedback(
+                rating=rating_value,
+                comment=form.comment.data.strip() if form.comment.data else None,
+                is_public=form.is_public.data,
+                user_id=current_user.id
+            )
+            
+            db.session.add(feedback)
+            db.session.commit()
 
-        flash('Thank you for your feedback!', 'success')
-        return redirect(url_for('main.feedback'))
+            flash(f'Thank you for your {feedback.rating_text.lower()} feedback! Your {rating_value}-star rating has been saved.', 'success')
+            return redirect(url_for('main.feedback'))
+            
+        except (ValueError, TypeError) as e:
+            flash('Error processing your rating. Please try again.', 'danger')
+            current_app.logger.error(f"Feedback rating error: {e}")
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while saving your feedback. Please try again.', 'danger')
+            current_app.logger.error(f"Feedback save error: {e}")
+    
+    elif request.method == 'POST':
+        # Form validation failed
+        if not form.rating.data:
+            flash('Please select a star rating before submitting your feedback.', 'warning')
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field.title()}: {error}', 'danger')
 
     return render_template('main/feedback.html', form=form)
 

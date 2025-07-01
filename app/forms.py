@@ -60,12 +60,14 @@ class PasswordChangeForm(FlaskForm):
 class FeedbackForm(FlaskForm):
     rating = RadioField('Rating',
         choices=[(1, '1 Star'), (2, '2 Stars'), (3, '3 Stars'), (4, '4 Stars'), (5, '5 Stars')],
-        validators=[DataRequired()],
-        coerce=int,
-        default=5
+        validators=[
+            DataRequired(message="Please select a star rating"),
+            NumberRange(min=1, max=5, message="Rating must be between 1 and 5 stars")
+        ],
+        coerce=int
     )
     comment = TextAreaField('Comment (Optional)',
-        validators=[Optional(), Length(max=1000)],
+        validators=[Optional(), Length(max=1000, message="Comment cannot exceed 1000 characters")],
         render_kw={"placeholder": "Share your thoughts about our service..."})
-    is_public = BooleanField('Share this feedback with administrators')
+    is_public = BooleanField('Share this feedback with administrators', default=True)
     submit = SubmitField('Submit Feedback') 
