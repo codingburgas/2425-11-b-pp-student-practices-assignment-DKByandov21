@@ -10,7 +10,6 @@ from app.models.prediction import Prediction
 from app.models.feedback import Feedback
 from app.ai import Perceptron, load_model
 from app.forms import ProfileUpdateForm, PasswordChangeForm, FeedbackForm
-from app.decorators import confirmation_required
 import io
 from datetime import datetime
 
@@ -145,7 +144,6 @@ def my_predictions():
 
 @main.route('/predict', methods=['GET', 'POST'])
 @login_required
-@confirmation_required
 def predict():
     if request.method == 'POST':
         # Check if file was uploaded
