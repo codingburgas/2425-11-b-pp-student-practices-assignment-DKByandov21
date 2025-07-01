@@ -53,6 +53,110 @@ class ModelMetrics:
         float
             Accuracy score between 0 and 1
         """
+        y_true = np.array(y_true)
+        y_pred = np.array(y_pred)
+        return np.mean(y_true == y_pred)
+    
+    @staticmethod
+    def precision(y_true, y_pred):
+        """
+        Calculate precision score.
+        
+        Parameters:
+        -----------
+        y_true : numpy.ndarray
+            True binary labels
+        y_pred : numpy.ndarray
+            Predicted binary labels
+            
+        Returns:
+        --------
+        float
+            Precision score between 0 and 1
+        """
+        cm = ModelMetrics.confusion_matrix(y_true, y_pred)
+        tp = cm[1, 1]
+        fp = cm[0, 1]
+        
+        if tp + fp == 0:
+            return 0.0
+        return tp / (tp + fp)
+    
+    @staticmethod
+    def recall(y_true, y_pred):
+        """
+        Calculate recall score.
+        
+        Parameters:
+        -----------
+        y_true : numpy.ndarray
+            True binary labels
+        y_pred : numpy.ndarray
+            Predicted binary labels
+            
+        Returns:
+        --------
+        float
+            Recall score between 0 and 1
+        """
+        cm = ModelMetrics.confusion_matrix(y_true, y_pred)
+        tp = cm[1, 1]
+        fn = cm[1, 0]
+        
+        if tp + fn == 0:
+            return 0.0
+        return tp / (tp + fn)
+    
+    @staticmethod
+    def f1_score(y_true, y_pred):
+        """
+        Calculate F1 score.
+        
+        Parameters:
+        -----------
+        y_true : numpy.ndarray
+            True binary labels
+        y_pred : numpy.ndarray
+            Predicted binary labels
+            
+        Returns:
+        --------
+        float
+            F1 score between 0 and 1
+        """
+        precision = ModelMetrics.precision(y_true, y_pred)
+        recall = ModelMetrics.recall(y_true, y_pred)
+        
+        if precision + recall == 0:
+            return 0.0
+        return 2 * (precision * recall) / (precision + recall)
+    
+    @staticmethod
+    def log_loss(y_true, y_pred_proba):
+        """
+        Calculate log loss (cross-entropy loss).
+        
+        Parameters:
+        -----------
+        y_true : numpy.ndarray
+            True binary labels
+        y_pred_proba : numpy.ndarray
+            Predicted probabilities
+            
+        Returns:
+        --------
+        float
+            Log loss value
+        """
+        y_true = np.array(y_true)
+        y_pred_proba = np.array(y_pred_proba)
+        
+        # Add small epsilon to prevent log(0)
+        epsilon = 1e-15
+        y_pred_proba = np.clip(y_pred_proba, epsilon, 1 - epsilon)
+        
+        loss = -np.mean(y_true * np.log(y_pred_proba) + (1 - y_true) * np.log(1 - y_pred_proba))
+        return loss
         return np.mean(y_true == y_pred)
     
     @staticmethod
