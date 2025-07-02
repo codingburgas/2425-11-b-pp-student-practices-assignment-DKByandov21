@@ -6,10 +6,14 @@ Pytest configuration and shared fixtures for Shape Classifier tests.
 import pytest
 import tempfile
 import os
+import sys
+import os
+# Add the parent directory of the current script (which contains 'app') to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import create_app, db
-from app.models.user import User
-from app.models.prediction import Prediction
-from app.models.feedback import Feedback
+from app.models import User
+from app.models import Prediction
+from app.models import Feedback
 
 
 @pytest.fixture

@@ -5,10 +5,14 @@ Tests for database models.
 
 import pytest
 from datetime import datetime
+import sys
+import os
+# Add the parent directory of the current script (which contains 'app') to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app import db
-from app.models.user import User
-from app.models.prediction import Prediction
-from app.models.feedback import Feedback
+from app.models import User
+from app.models import Prediction
+from app.models import Feedback
 
 
 class TestUser:

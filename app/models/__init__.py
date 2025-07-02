@@ -1,9 +1,6 @@
 
 """
-Database models package for Shape Classifier.
-
-This package contains all SQLAlchemy models for the application.
-All models are imported here to ensure they're registered with SQLAlchemy.
+Всички модели се импортират тук, за да се гарантира, че са регистрирани със SQLAlchemy.
 """
 
 from app.models.user import User

@@ -2,9 +2,9 @@ import joblib
 
 def save_model(model, path):
     """
-    Save the trained model (Perceptron or LogisticRegression) to a file using joblib.
+    Запазва обучен модел (Perceptron или LogisticRegression) във файл чрез joblib.
     """
-    # Save only the necessary attributes for reloading
+    # Запазва само необходимите атрибути за повторно зареждане
     model_data = {
         'weights': model.weights,
         'bias': model.bias,
@@ -13,16 +13,17 @@ def save_model(model, path):
         'model_type': model.__class__.__name__
     }
     
-    # Add loss history for LogisticRegression
+    # Добавя историята на загубите, ако е LogisticRegression
     if hasattr(model, 'loss_history'):
         model_data['loss_history'] = model.loss_history
     
     joblib.dump(model_data, path)
-    print(f"Model saved to {path}")
+    print(f"Моделът е запазен в {path}")
 
 def load_model(path, model_class):
     """
-    Load a model from a file and return an instance with restored weights and bias.
+    Зарежда модел от файл и връща инстанция с възстановени тегла и bias.
+    
     """
     model_data = joblib.load(path)
     model = model_class()
@@ -31,9 +32,9 @@ def load_model(path, model_class):
     model.n_features = model_data['n_features']
     model.n_iterations = model_data.get('n_iterations', 0)
     
-    # Restore loss history for LogisticRegression
+    # Възстановява историята на загубите, ако съществува
     if hasattr(model, 'loss_history') and 'loss_history' in model_data:
         model.loss_history = model_data['loss_history']
     
-    print(f"Model loaded from {path}")
-    return model 
+    print(f"Моделът е зареден от {path}")
+    return model

@@ -1,12 +1,9 @@
 
 """
-Routes package for Shape Classifier.
-
-This package contains all Flask blueprints for the application.
-Blueprints are organized by functionality:
-- auth: Authentication routes (login, register, logout)
-- main: Main application routes (profile, predict, feedback)
-- admin: Administrative routes (dashboard, user management)
+Blueprint-ите са организирани според функционалността:
+- auth: Маршрути за автентикация (вход, регистрация, изход)
+- main: Основни маршрути на приложението (профил, предсказване, обратна връзка)
+- admin: Административни маршрути (табло, управление на потребители)
 """
 
 from app.routes.auth import auth

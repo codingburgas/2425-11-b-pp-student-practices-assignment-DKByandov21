@@ -1,4 +1,3 @@
-
 """
 Main entry point for the Shape Classifier Flask application.
 
@@ -13,19 +12,22 @@ from app.models.prediction import Prediction
 from app.models.feedback import Feedback
 from flask_migrate import upgrade
 
+
 def deploy():
     """Run deployment tasks."""
     app = create_app()
     app.app_context().push()
-    
+
     # Create database tables
     db.create_all()
-    
+
     # Migrate database to latest revision
     upgrade()
 
+
 # Create application instance
 app = create_app()
+
 
 @app.shell_context_processor
 def make_shell_context():
@@ -36,6 +38,7 @@ def make_shell_context():
         'Prediction': Prediction,
         'Feedback': Feedback
     }
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

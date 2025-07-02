@@ -5,10 +5,16 @@ Tests for AI models and algorithms.
 
 import pytest
 import numpy as np
-from app.ai.perceptron import Perceptron
-from app.ai.logistic_regression import LogisticRegression
-from app.ai.synthetic_dataset import generate_circle_square_dataset
-from app.ai.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import sys
+import os
+# Add the parent directory of the current script (which contains 'app') to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from app.ai import Perceptron
+from app.ai import LogisticRegression
+# Change this line
+
+from app.ai.synthetic_dataset import create_synthetic_dataset as generate_circle_square_dataset
+from app.ai import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 
 class TestPerceptron:

@@ -26,7 +26,7 @@ class User(UserMixin, db.Model):
         return self.role == 'admin'
     
     def is_active(self):
-        return self.active
+        return bool(self.active)
     
     def get_prediction_count(self):
         return len(self.predictions)

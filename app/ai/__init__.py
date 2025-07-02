@@ -1,13 +1,9 @@
-
 """
-AI package for Shape Classifier.
-
-This package contains machine learning models and utilities:
-- perceptron: Custom Perceptron implementation
-- logistic_regression: Logistic Regression implementation
-- model_utils: Model persistence and loading utilities
-- synthetic_dataset: Dataset generation utilities
-- metrics: Evaluation metrics and utilities
+- perceptron: Собствена имплементация на Персептрон
+- logistic_regression: Имплементация на Логистична Регресия
+- model_utils: Помощни функции за запазване и зареждане на модели
+- synthetic_dataset: Инструменти за генериране на синтетични набори от данни
+- metrics: Метрики за оценка и помощни функции
 """
 
 from .perceptron import Perceptron
@@ -16,29 +12,29 @@ from .model_utils import save_model, load_model
 from .synthetic_dataset import create_synthetic_dataset
 from .metrics import ModelMetrics, InformationGain
 
-# Create convenience functions that wrap the ModelMetrics static methods
+# Създаване на удобни функции, които обвиват статичните методи на ModelMetrics
 def accuracy_score(y_true, y_pred):
-    """Calculate accuracy score."""
+    """Тук изчисляване на точност (accuracy)."""
     return ModelMetrics.accuracy(y_true, y_pred)
 
 def precision_score(y_true, y_pred):
-    """Calculate precision score."""
+    """Тук изчисляване на прецизност (precision)."""
     return ModelMetrics.precision(y_true, y_pred)
 
 def recall_score(y_true, y_pred):
-    """Calculate recall score."""
+    """Тук изчисляване на чувствителност (recall)."""
     return ModelMetrics.recall(y_true, y_pred)
 
 def f1_score(y_true, y_pred):
-    """Calculate F1 score."""
+    """Тук изчисляване на F1 резултат."""
     return ModelMetrics.f1_score(y_true, y_pred)
 
 def confusion_matrix(y_true, y_pred):
-    """Calculate confusion matrix."""
+    """Тук изчисляване на матрица на объркванията."""
     return ModelMetrics.confusion_matrix(y_true, y_pred)
 
 def log_loss(y_true, y_pred_proba):
-    """Calculate log loss."""
+    """Тук изчисляване на лог загуба (log loss)."""
     return ModelMetrics.log_loss(y_true, y_pred_proba)
 
 __all__ = [

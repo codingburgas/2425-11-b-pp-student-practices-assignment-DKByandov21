@@ -15,11 +15,11 @@ from datetime import datetime
 
 main = Blueprint('main', __name__)
 
-# Path to the trained model
+# Път до обучен модел
 MODEL_PATH = "perceptron_model.joblib"
 
 def get_model():
-    """Load the model once at startup"""
+    """Зареждане на модела веднъж при стартиране"""
     if not hasattr(current_app, 'perceptron_model'):
         try:
             current_app.perceptron_model = load_model(MODEL_PATH, Perceptron)
@@ -38,25 +38,25 @@ def index():
 @main.route('/profile')
 @login_required
 def profile():
-    # Calculate user's prediction accuracy metrics
+    # Изчисляване на точността и метриките на потребителя
     user_predictions = Prediction.query.filter_by(user_id=current_user.id).all()
     user_feedbacks = Feedback.query.filter_by(user_id=current_user.id).all()
     
-    # Calculate basic statistics
+    # Изчисляване на основни статистики
     total_predictions = len(user_predictions)
     total_feedback = len(user_feedbacks)
     
-    # Calculate average confidence
+    # Изчисляване на средна увереност
     avg_confidence = 0
     if total_predictions > 0:
         avg_confidence = sum(p.confidence for p in user_predictions) / total_predictions
     
-    # Calculate average rating
+    # Изчисляване на средна оценка
     avg_rating = 0
     if total_feedback > 0:
         avg_rating = sum(f.rating for f in user_feedbacks) / total_feedback
     
-    # Group predictions by model type if available
+    # Обобщени данни за предсказанията
     prediction_stats = {
         'total': total_predictions,
         'avg_confidence': avg_confidence,
@@ -78,21 +78,18 @@ def profile_settings():
         current_user.username = form.username.data
         current_user.email = form.email.data
 
-        # Handle profile picture upload
+        # Обработка на качване на профилна снимка
         if form.profile_picture.data:
             file = form.profile_picture.data
             if file and file.filename:
-                # Secure the filename
                 filename = secure_filename(file.filename)
-                # Add user ID to make filename unique
                 name, ext = os.path.splitext(filename)
                 filename = f"{current_user.id}_{name}{ext}"
 
-                # Save the file
                 filepath = os.path.join(current_app.root_path, 'static', 'uploads', filename)
                 file.save(filepath)
 
-                # Resize image to 200x200 for consistency
+                # Преоразмеряване на изображението до 200x200
                 try:
                     with Image.open(filepath) as img:
                         img = img.convert('RGB')
@@ -102,7 +99,6 @@ def profile_settings():
                     flash(f'Error processing image: {str(e)}', 'error')
                     return redirect(url_for('main.profile_settings'))
 
-                # Update database
                 current_user.profile_picture = filename
 
         db.session.commit()
@@ -146,7 +142,7 @@ def my_predictions():
 @login_required
 def predict():
     if request.method == 'POST':
-        # Check if file was uploaded
+        # Проверка дали има избран файл
         if 'file' not in request.files:
             flash('No file selected', 'danger')
             return redirect(request.url)
@@ -156,65 +152,51 @@ def predict():
             flash('No file selected', 'danger')
             return redirect(request.url)
 
-        # Get selected model type
+        # Получаване на избрания модел
         model_type = request.form.get('model_type', 'perceptron')
 
         if file and allowed_file(file.filename):
             try:
-                # Read and process the image
+                # Обработка на изображението
                 image = Image.open(io.BytesIO(file.read()))
-
-                # Convert to grayscale and resize to 28x28
                 image = image.convert('L')
                 image = image.resize((28, 28))
 
-                # Convert to numpy array and normalize
                 image_array = np.array(image, dtype=np.float32)
-                image_array = image_array / 255.0  # Normalize to 0-1
-                image_array = image_array.flatten()  # Flatten to 1D array
+                image_array = image_array / 255.0
+                image_array = image_array.flatten()
 
-                # Load the appropriate model
                 if model_type == 'logistic':
                     from app.ai import LogisticRegression
-                    model = load_model('logistic_model.joblib', LogisticRegression)
-                    # Make prediction with probability
+                    model = load_model('app/ai/save_models/logistic_model.joblib', LogisticRegression)
                     prediction = model.predict(image_array.reshape(1, -1))[0]
                     probability = model.predict_proba(image_array.reshape(1, -1))[0]
-                    # For logistic regression, use the probability of the predicted class as confidence
-                    if prediction == 1:
-                        confidence = probability  # Probability of class 1
-                    else:
-                        confidence = 1 - probability  # Probability of class 0
+                    confidence = probability if prediction == 1 else 1 - probability
                     model_name = "Logistic Regression"
-                    
-                    # Calculate log loss for this single prediction
+
                     from app.ai.metrics import ModelMetrics
                     log_loss_value = ModelMetrics.log_loss(np.array([prediction]), np.array([probability]))
                 else:
-                    model = load_model('perceptron_model.joblib', Perceptron)
-                    # Make prediction
+                    model = load_model('app/ai/save_models/perceptron_model.joblib', Perceptron)
                     prediction = model.predict(image_array.reshape(1, -1))[0]
-                    # Calculate confidence (distance from decision boundary)
                     weights, bias = model.get_weights()
                     z = np.dot(image_array, weights) + bias
-                    confidence = abs(z)  # Distance from decision boundary
-                    confidence = min(confidence * 10, 1.0)  # Scale and cap at 1.0
+                    confidence = abs(z)
+                    confidence = min(confidence * 10, 1.0)
                     model_name = "Perceptron"
 
-                # Convert prediction to label
                 predicted_class = 'Square' if prediction == 1 else 'Circle'
 
-                # Save uploaded file
+                # Запазване на изображението
                 filename = secure_filename(file.filename)
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f"{current_user.id}_{timestamp}_{filename}"
                 filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
 
-                # Save the processed image
                 processed_image = Image.fromarray((image_array.reshape(28, 28) * 255).astype(np.uint8))
                 processed_image.save(filepath)
 
-                # Save prediction to database
+                # Запазване в базата
                 new_prediction = Prediction(
                     user_id=current_user.id,
                     filename=filename,
@@ -225,15 +207,14 @@ def predict():
                 db.session.commit()
 
                 flash(f'Prediction complete! Model: {model_name}, Result: {predicted_class} (Confidence: {confidence:.2f})', 'success')
-                
-                # Prepare additional metrics for display
+
                 additional_metrics = {}
                 if model_type == 'logistic':
                     additional_metrics['log_loss'] = log_loss_value
                     additional_metrics['probability'] = probability
                 else:
                     additional_metrics['decision_distance'] = abs(z)
-                
+
                 return render_template('main/predict.html', 
                                      prediction=predicted_class, 
                                      confidence=confidence,
@@ -257,13 +238,11 @@ def feedback():
 
     if form.validate_on_submit():
         try:
-            # Ensure rating is valid integer between 1-5
             rating_value = int(form.rating.data)
             if rating_value < 1 or rating_value > 5:
                 flash('Invalid rating value. Please select a rating between 1 and 5 stars.', 'danger')
                 return render_template('main/feedback.html', form=form)
-            
-            # Create new feedback
+
             feedback = Feedback(
                 rating=rating_value,
                 comment=form.comment.data.strip() if form.comment.data else None,
@@ -276,7 +255,7 @@ def feedback():
 
             flash(f'Thank you for your {feedback.rating_text.lower()} feedback! Your {rating_value}-star rating has been saved.', 'success')
             return redirect(url_for('main.feedback'))
-            
+
         except (ValueError, TypeError) as e:
             flash('Error processing your rating. Please try again.', 'danger')
             current_app.logger.error(f"Feedback rating error: {e}")
@@ -286,7 +265,6 @@ def feedback():
             current_app.logger.error(f"Feedback save error: {e}")
     
     elif request.method == 'POST':
-        # Form validation failed
         if not form.rating.data:
             flash('Please select a star rating before submitting your feedback.', 'warning')
         for field, errors in form.errors.items():
@@ -309,29 +287,26 @@ def my_feedback():
 @main.route('/model-evaluation')
 @login_required
 def model_evaluation():
-    """Display model evaluation metrics and comparison."""
+    """Показване на метрики и сравнение между модели."""
     try:
         from app.ai.metrics import ModelMetrics
         from app.ai.synthetic_dataset import create_synthetic_dataset
         from sklearn.metrics import confusion_matrix
         
-        # Load both models
-        perceptron_model = load_model('perceptron_model.joblib', Perceptron)
+        perceptron_model = load_model('app/ai/save_models/perceptron_model.joblib', Perceptron)
         
         try:
             from app.ai import LogisticRegression
-            logistic_model = load_model('logistic_model.joblib', LogisticRegression)
-        except:
+            logistic_model = load_model('app/ai/save_models/logistic_model.joblib', LogisticRegression)
+        except (FileNotFoundError, Exception) as e:
+            print(f"Error loading logistic model: {str(e)}")
             logistic_model = None
         
-        # Generate test data for evaluation
         X_test, y_test = create_synthetic_dataset(n_samples_per_class=500, random_seed=42)
         
-        # Evaluate Perceptron
         perceptron_pred = perceptron_model.predict(X_test)
         perceptron_metrics = ModelMetrics.calculate_all_metrics(y_test, perceptron_pred)
         
-        # Create confusion matrix for Perceptron
         cm_perceptron = confusion_matrix(y_test, perceptron_pred)
         perceptron_cm = {
             'true_negatives': int(cm_perceptron[0, 0]),
@@ -341,14 +316,12 @@ def model_evaluation():
             'total': int(len(y_test))
         }
         
-        # Evaluate Logistic Regression if available
         logistic_metrics = None
         logistic_cm = None
         if logistic_model:
             logistic_pred = logistic_model.predict(X_test)
             logistic_metrics = ModelMetrics.calculate_all_metrics(y_test, logistic_pred)
             
-            # Create confusion matrix for Logistic Regression
             cm_logistic = confusion_matrix(y_test, logistic_pred)
             logistic_cm = {
                 'true_negatives': int(cm_logistic[0, 0]),
@@ -357,18 +330,16 @@ def model_evaluation():
                 'true_positives': int(cm_logistic[1, 1]),
                 'total': int(len(y_test))
             }
-        
-        # Create dummy feature importance data (since we don't have Information Gain implemented)
+
         feature_importance = {
             'top_features': []
         }
-        
-        # Generate top 20 features with dummy data
+
         for i in range(20):
             feature_importance['top_features'].append({
-                'feature_name': f'Pixel_{i*39}',  # Spread across the 28x28 image
+                'feature_name': f'Pixel_{i*39}',
                 'feature_idx': i*39,
-                'information_gain': 0.1 - (i * 0.005)  # Decreasing importance
+                'information_gain': 0.1 - (i * 0.005)
             })
         
         return render_template('main/model_evaluation.html', 

@@ -4,8 +4,11 @@ Tests for WTForms validation.
 """
 
 import pytest
+import sys
+import os
+# Add the parent directory of the current script (which contains 'app') to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from app.forms import RegistrationForm, LoginForm, FeedbackForm
-
 
 class TestRegistrationForm:
     """Test registration form validation."""

@@ -15,18 +15,18 @@ admin = Blueprint('admin', __name__, url_prefix='/admin')
 @login_required
 @admin_required
 def dashboard():
-    # Get comprehensive statistics for admin dashboard
+    # Получаване на статистики за администраторското табло
     total_users = User.query.count()
     active_users = User.query.filter_by(active=True).count()
     total_predictions = Prediction.query.count()
     recent_predictions = Prediction.query.order_by(Prediction.created_at.desc()).limit(10).all()
     users = User.query.all()
     
-    # Aggregated statistics
+    # Обобщена статистика за класове
     circle_predictions = Prediction.query.filter_by(prediction='Circle').count()
     square_predictions = Prediction.query.filter_by(prediction='Square').count()
     
-    # Calculate average confidence
+    # Изчисляване на средна увереност
     predictions_with_confidence = Prediction.query.filter(Prediction.confidence.isnot(None)).all()
     avg_confidence = 0
     if predictions_with_confidence:
@@ -60,16 +60,16 @@ def predictions():
 @login_required
 @admin_required
 def statistics():
-    # Comprehensive statistics
+    # Основна статистика
     total_users = User.query.count()
     active_users = User.query.filter_by(active=True).count()
     total_predictions = Prediction.query.count()
     
-    # Prediction breakdown
+    # Брой предсказания за всеки клас
     circle_predictions = Prediction.query.filter_by(prediction='Circle').count()
     square_predictions = Prediction.query.filter_by(prediction='Square').count()
     
-    # User activity statistics
+    # Активност на потребителите
     users_with_predictions = User.query.join(Prediction).distinct().count()
     most_active_user = db.session.query(User, db.func.count(Prediction.id).label('pred_count'))\
         .join(Prediction)\
@@ -77,10 +77,10 @@ def statistics():
         .order_by(db.func.count(Prediction.id).desc())\
         .first()
     
-    # Average predictions per user
+    # Среден брой предсказания на потребител
     avg_predictions_per_user = total_predictions / total_users if total_users > 0 else 0
     
-    # Confidence statistics
+    # Средна увереност
     predictions_with_confidence = Prediction.query.filter(Prediction.confidence.isnot(None)).all()
     avg_confidence = 0
     if predictions_with_confidence:
@@ -162,11 +162,11 @@ def delete_user(user_id):
         flash('You cannot delete yourself.', 'error')
     else:
         username = user.username
-        # Delete all predictions by this user first
+        # Изтриване на всички предсказания на потребителя
         Prediction.query.filter_by(user_id=user.id).delete()
-        # Delete all feedback by this user
+        # Изтриване на всички отзиви на потребителя
         Feedback.query.filter_by(user_id=user.id).delete()
-        # Delete the user
+        # Изтриване на самия потребител
         db.session.delete(user)
         db.session.commit()
         flash(f'{username} and all their predictions and feedback have been deleted.', 'success')
@@ -192,7 +192,7 @@ def feedback():
 
     feedbacks = query.paginate(page=page, per_page=15, error_out=False)
 
-    # Analytics
+    # Статистика за отзиви
     total_feedback = Feedback.query.count()
     rating_dist = [Feedback.query.filter_by(rating=i).count() for i in range(1, 6)]
     public_count = Feedback.query.filter_by(is_public=True).count()
@@ -224,13 +224,11 @@ def delete_feedback(feedback_id):
 @login_required
 @admin_required
 def feedback_stats():
-    """API endpoint for feedback statistics (for charts)"""
-    # Rating distribution
+    # API за статистика на отзивите (използва се за графики)
     rating_dist = {}
     for i in range(1, 6):
         rating_dist[f'{i} Star'] = Feedback.query.filter_by(rating=i).count()
     
-    # Visibility distribution
     visibility_dist = {
         'Public': Feedback.query.filter_by(is_public=True).count(),
         'Private': Feedback.query.filter_by(is_public=False).count()
@@ -239,4 +237,4 @@ def feedback_stats():
     return jsonify({
         'rating_distribution': rating_dist,
         'visibility_distribution': visibility_dist
-    }) 
+    })

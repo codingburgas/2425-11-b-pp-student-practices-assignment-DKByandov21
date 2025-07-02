@@ -1,29 +1,11 @@
-
 import numpy as np
 
 class LogisticRegression:
-    """
-    Binary Logistic Regression classifier implementation from scratch using NumPy.
     
-    Uses sigmoid activation function and cross-entropy loss for binary classification.
-    Supports gradient descent optimization with configurable learning rate and epochs.
-    
-    Attributes:
-    -----------
-    weights : numpy.ndarray
-        Weight vector including bias term (last element)
-    bias : float
-        Bias term (stored separately for convenience)
-    n_features : int
-        Number of input features
-    n_iterations : int
-        Number of iterations during training
-    loss_history : list
-        Training loss history for each epoch
-    """
-    
-    def __init__(self):
-        """Initialize the Logistic Regression classifier."""
+    def __init__(self, learning_rate=0.01, max_epochs=1000):
+        self.learning_rate = learning_rate
+        self.max_epochs = max_epochs
+        """Инициализиране на логистичния регресионен класификатор."""
         self.weights = None
         self.bias = None
         self.n_features = None
@@ -32,55 +14,29 @@ class LogisticRegression:
     
     def _sigmoid(self, z):
         """
-        Sigmoid activation function with numerical stability.
-        
-        Parameters:
-        -----------
-        z : numpy.ndarray
-            Input to the sigmoid function
-            
-        Returns:
-        --------
-        numpy.ndarray
-            Sigmoid output between 0 and 1
+        Сигмоидна активационна функция с числова стабилност.
+        Сигмоидна стойност между 0 и 1
         """
-        # Clip z to prevent overflow
+        # Ограничаване на z за предотвратяване на препълване
         z = np.clip(z, -500, 500)
         return 1 / (1 + np.exp(-z))
     
     def _add_bias(self, X):
         """
-        Add bias term to input features.
-        
-        Parameters:
-        -----------
-        X : numpy.ndarray
-            Input features with shape (n_samples, n_features)
-            
-        Returns:
-        --------
-        numpy.ndarray
-            Features with bias term added as last column
+        Добавя bias термин към входните характеристики.
         """
         return np.column_stack([X, np.ones(X.shape[0])])
     
     def _compute_loss(self, y_true, y_pred):
         """
-        Compute cross-entropy (log) loss.
-        
-        Parameters:
-        -----------
+        Изчислява крос-ентропийна (логаритмична) загуба.
+
         y_true : numpy.ndarray
-            True binary labels
+            Истински бинарни етикети
         y_pred : numpy.ndarray
-            Predicted probabilities
-            
-        Returns:
-        --------
-        float
-            Cross-entropy loss
+            Предсказани вероятности
         """
-        # Add small epsilon to prevent log(0)
+        # Малко епсилон за предотвратяване на log(0)
         epsilon = 1e-15
         y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
         
@@ -88,96 +44,53 @@ class LogisticRegression:
         return loss
     
     def fit(self, X, y, epochs=100, learning_rate=0.01, verbose=False):
-        """
-        Fit the Logistic Regression model to the training data.
-        
-        Parameters:
-        -----------
-        X : numpy.ndarray
-            Training features with shape (n_samples, n_features)
-        y : numpy.ndarray
-            Target labels with shape (n_samples,) containing 0s and 1s
-        epochs : int, default=100
-            Number of training epochs
-        learning_rate : float, default=0.01
-            Learning rate for gradient descent
-        verbose : bool, default=False
-            Whether to print training progress
-            
-        Returns:
-        --------
-        self : LogisticRegression
-            Fitted model instance
-        """
-        # Input validation
+
         if X.shape[0] != y.shape[0]:
-            raise ValueError("X and y must have the same number of samples")
+            raise ValueError("X и y трябва да имат еднакъв брой примери")
         
         if not np.all(np.isin(y, [0, 1])):
-            raise ValueError("y must contain only 0s and 1s")
+            raise ValueError("y трябва да съдържа само 0 и 1")
         
-        # Initialize weights and bias
         self.n_features = X.shape[1]
-        # Initialize weights using Xavier initialization
+        # Инициализация на теглата с Xavier метод
         self.weights = np.random.normal(0, np.sqrt(2.0 / self.n_features), self.n_features + 1)
         self.bias = self.weights[-1]
         
-        # Add bias term to features
         X_with_bias = self._add_bias(X)
-        
-        # Reset loss history
         self.loss_history = []
         
-        # Training loop using gradient descent
+        # Тренировъчен цикъл с градиентен спад
         for epoch in range(epochs):
-            # Forward pass
             z = np.dot(X_with_bias, self.weights)
             predictions = self._sigmoid(z)
             
-            # Compute loss
             loss = self._compute_loss(y, predictions)
             self.loss_history.append(loss)
             
-            # Compute gradients
             error = predictions - y
             gradients = np.dot(X_with_bias.T, error) / X.shape[0]
             
-            # Update weights
             self.weights -= learning_rate * gradients
             self.bias = self.weights[-1]
             
-            # Print progress
             if verbose and (epoch + 1) % 20 == 0:
                 accuracy = self.score(X, y)
-                print(f"Epoch {epoch + 1:3d}: Loss = {loss:.6f}, Accuracy = {accuracy:.4f}")
+                print(f"Епоха {epoch + 1:3d}: Загуба = {loss:.6f}, Точност = {accuracy:.4f}")
         
         self.n_iterations = epochs
         return self
     
     def predict_proba(self, X):
         """
-        Predict class probabilities for samples in X.
-        
-        Parameters:
-        -----------
-        X : numpy.ndarray
-            Input features with shape (n_samples, n_features)
-            
-        Returns:
-        --------
-        numpy.ndarray
-            Predicted probabilities for class 1 with shape (n_samples,)
+        Предсказва вероятности за клас 1 за подадените примери.
         """
         if self.weights is None:
-            raise ValueError("Model must be fitted before making predictions")
+            raise ValueError("Моделът трябва да бъде обучен преди предсказване")
         
         if X.shape[1] != self.n_features:
-            raise ValueError(f"Expected {self.n_features} features, got {X.shape[1]}")
+            raise ValueError(f"Очаквани {self.n_features} характеристики, получени {X.shape[1]}")
         
-        # Add bias term to features
         X_with_bias = self._add_bias(X)
-        
-        # Compute probabilities for class 1
         z = np.dot(X_with_bias, self.weights)
         probabilities = self._sigmoid(z)
         
@@ -185,19 +98,7 @@ class LogisticRegression:
     
     def predict(self, X, threshold=0.5):
         """
-        Predict class labels for samples in X.
-        
-        Parameters:
-        -----------
-        X : numpy.ndarray
-            Input features with shape (n_samples, n_features)
-        threshold : float, default=0.5
-            Decision threshold for binary classification
-            
-        Returns:
-        --------
-        numpy.ndarray
-            Predicted class labels (0 or 1) with shape (n_samples,)
+        Предсказва класови етикети (0 или 1) на база вероятности.
         """
         probabilities = self.predict_proba(X)
         predictions = (probabilities >= threshold).astype(int)
@@ -205,19 +106,8 @@ class LogisticRegression:
     
     def score(self, X, y):
         """
-        Calculate the accuracy score of the model on the given data.
-        
-        Parameters:
-        -----------
-        X : numpy.ndarray
-            Input features with shape (n_samples, n_features)
-        y : numpy.ndarray
-            True labels with shape (n_samples,)
-            
-        Returns:
-        --------
-        float
-            Accuracy score between 0 and 1
+        Изчислява точността на модела върху подадените данни.
+        Точност (accuracy) между 0 и 1
         """
         predictions = self.predict(X)
         accuracy = np.mean(predictions == y)
@@ -225,45 +115,30 @@ class LogisticRegression:
     
     def get_weights(self):
         """
-        Get the learned weights and bias.
+        Връща научените тегла и bias.
         
-        Returns:
-        --------
-        tuple
-            (weights, bias) where weights is array of feature weights and bias is scalar
         """
         if self.weights is None:
-            raise ValueError("Model must be fitted before accessing weights")
+            raise ValueError("Моделът трябва да бъде обучен преди извличане на теглата")
         
-        feature_weights = self.weights[:-1]  # All except bias
+        feature_weights = self.weights[:-1]  # Всички без bias
         return feature_weights, self.bias
     
     def get_feature_importance(self, feature_names=None):
         """
-        Get feature importance based on absolute weight values.
-        
-        Parameters:
-        -----------
-        feature_names : list, optional
-            Names for features. If None, uses indices.
-            
-        Returns:
-        --------
-        dict
-            Dictionary mapping feature names to importance scores
+        Връща важността на характеристиките въз основа на абсолютните стойности на теглата.
         """
         if self.weights is None:
-            raise ValueError("Model must be fitted before accessing weights")
+            raise ValueError("Моделът трябва да бъде обучен преди извличане на важностите")
         
-        feature_weights = np.abs(self.weights[:-1])  # Exclude bias
+        feature_weights = np.abs(self.weights[:-1])  # Без bias
         
         if feature_names is None:
             feature_names = [f"feature_{i}" for i in range(len(feature_weights))]
         
         importance_dict = dict(zip(feature_names, feature_weights))
         
-        # Sort by importance (descending)
         sorted_importance = dict(sorted(importance_dict.items(), 
-                                      key=lambda x: x[1], reverse=True))
+                                        key=lambda x: x[1], reverse=True))
         
         return sorted_importance
